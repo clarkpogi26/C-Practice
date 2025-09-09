@@ -1,0 +1,42 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Xml.Linq;
+using C__starter;
+
+namespace C__starter
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Dog dog = new Dog();
+            Cat cat = new Cat();
+
+            dog.makeSound();
+            cat.makeSound();
+
+            Console.ReadKey();
+        }
+    }
+    public abstract class Animal
+    { // cant make methods
+        public String name = "";
+        public abstract void makeSound();
+    }
+    public class Dog : Animal
+    {
+        public override void makeSound()
+        {
+            name = "Dog";
+            Console.WriteLine($"{name} Woof!");
+        }
+    }
+    public class Cat : Animal
+    {
+        public override void makeSound()
+        {
+            name = "Cat";
+            Console.WriteLine($"{name} Meow!");
+        }
+    }
+}

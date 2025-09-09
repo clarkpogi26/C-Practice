@@ -1,0 +1,18 @@
+using System;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        string answer;
+
+        do
+        {
+            Console.Write("Do you want to continue? (yes/no): ");
+            answer = Console.ReadLine().ToLower();
+        }
+        while (answer != "yes");
+
+        Console.WriteLine("You chose to continue!");
+    }
+}

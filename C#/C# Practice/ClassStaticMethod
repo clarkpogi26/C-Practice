@@ -1,0 +1,20 @@
+using System;
+using System.Security.Cryptography.X509Certificates;
+using C__starter;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Cannot declare a variable of static type 'UsefulTools'
+        UsefulTools UsefulTools1 = new UsefulTools();
+        UsefulTools.sayHi("Clark");
+    }
+    static class UsefulTools
+    {
+        public static void sayHi(string name)
+        {
+            Console.WriteLine("Hello " + name);
+        }
+    }
+}

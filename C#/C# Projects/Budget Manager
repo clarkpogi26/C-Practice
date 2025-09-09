@@ -1,0 +1,289 @@
+using System.Globalization;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text;
+
+public class Program
+{
+    public static Dictionary<int, User> u = new();
+    public static Transaction t = new();
+    public static User user = new();
+    public static User curUser;
+    public static int userKey = 1; // Task: Argon2 the password
+    public static void Main() // Problem: 
+    {
+        while (true)
+        {
+            Console.Clear(); LoadFile("a");
+            Console.WriteLine(curUser != null ? $"User: {curUser.name}" : "User: ");
+            Console.WriteLine("(1) Login\n(2) Create User\n(3) Transact\n(4) Balance\n(5) Goal\n(6) History\n(7) Remove");
+            int w = Input();
+            if (w > 2 && curUser == null) { Console.WriteLine("Login First"); C(); continue; }
+            switch (w)
+            {
+                case 1: Console.Clear(); Login(); break;
+                case 2: Console.Clear(); Create(); break;
+                case 3: Console.Clear(); Trans(); break;
+                case 4: Console.Clear(); Balance();break;
+                case 5: Console.Clear(); Goal(); break;
+                case 6: Console.Clear(); History(); break;
+                case 7: Console.Clear(); Remove(); break;
+                case 8: Console.Clear(); Removed(); break;
+                case 9 when curUser.name == "Clark": u.Clear(); curUser.trans.Clear(); SaveFile("a"); ;break;
+            }
+        }
+    }
+    public static void Login()
+    {
+        while (true)
+        {
+            Console.Clear(); ShowUser();
+            Console.Write("'exit'\nUsername: ");
+            string uname = Console.ReadLine(); if (uname.ToLower() == "exit") break;
+            Console.Write("'back'\nPassword: ");
+            string upass = Console.ReadLine(); if (upass.ToLower() == "back") continue;
+            var result = u.Values.FirstOrDefault(k => k.name == uname);
+            if (result == null) { Console.Clear(); Console.WriteLine("Invalid Username"); C(); continue; }
+            if (result.password != Password(upass)) { Console.Clear(); Console.WriteLine("Invalid Password"); C(); continue; }
+            int key = u.FirstOrDefault(k => k.Value.name == uname).Key;
+            curUser = u[key]; SaveFile("a"); Console.Clear(); Console.WriteLine($"Welcome {curUser.name}!"); C(); break;
+        }
+    }
+    public static void Create()
+    {
+        while (true)
+        {
+            Console.Write("'exit'\nType a username: ");
+            string uname = Console.ReadLine(); if (uname.ToLower() == "exit") break;
+            Console.Write("'back'\nType a password: ");
+            string upass = Console.ReadLine(); if (upass.ToLower() == "back") continue;
+            if (u.Values.Any(k => k.name == uname)) { Console.WriteLine("Already Taken"); continue; }
+            u.Add(userKey, new User { name = uname, password = Password(upass), balance = 0, goal = 0 });
+            userKey++; Arrange('a'); SaveFile("a");
+            break;
+        }
+    }   
+    public static void Balance()
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.WriteLine($"Your current balance: {curUser.balance}");
+            Console.WriteLine("(1) Deposit\n(2) Withdraw\n(Enter) Exit");
+            int w = Input();
+            if (w > 2 || w == -1) continue;
+            if (w == -2) break; 
+            if (w == 1)
+            {
+                Console.Write("'back'\nDeposit Amount: ");
+                string amoun = Console.ReadLine(); if (amoun.ToLower() == "back") continue;
+                if (!decimal.TryParse(amoun, out decimal amount)) { Console.WriteLine("Numbers Only"); C(); continue; }
+                if (amoun.Contains("+") || amoun.Contains("-")) continue;
+                curUser.trans.Add(new Transaction { amount = +amount, category = "Deposit", date = DateTime.Now, });
+                SumBalance(); Console.WriteLine($"{amount} has been deposited to your balance"); C(); SaveFile("a"); continue;
+            }
+            if (w == 2)
+            {
+                Console.Write("'back'\nWithdraw Amount: ");
+                string amoun = Console.ReadLine(); if (amoun.ToLower() == "back") continue;
+                if (!decimal.TryParse(amoun, out decimal amount)) { Console.WriteLine("Numbers Only"); C(); continue; }
+                if (amoun.Contains("+") || amoun.Contains("-")) continue;
+                if (amount > curUser.balance) { Console.WriteLine("Insufficient Funds"); C(); continue; }
+                curUser.trans.Add(new Transaction { amount = -amount, category = "Withdraw", date = DateTime.Now, });
+                SumBalance(); Console.WriteLine($"{amount} has been withdrawn from your balance"); C(); SaveFile("a"); continue;
+            }
+        }
+    }
+    public static void Trans()
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.Write("'exit'\nAmount: ");
+            String a = Console.ReadLine(); if (a == "exit") break;
+            if (!decimal.TryParse(a.ToString(), out decimal am) || a.Contains("-") || a.Contains("+")) continue;
+            if (am > curUser.balance) { Console.WriteLine($"Insufficient Balance: {curUser.balance}"); C(); continue; }
+            Console.Write("'back'\nCategory: ");
+            String ca = Console.ReadLine(); if (ca == "back") continue;
+            Console.Write("'back'\nNote: ");
+            String no = Console.ReadLine(); if (no == "back") continue;
+            curUser.trans.Add(new Transaction { amount = -am, category = ca, date = DateTime.Now, note = no });
+            SumBalance(); SaveFile("a"); break;
+        }
+    }
+    public static void Goal()
+    {
+        while (true)
+        {
+            Console.WriteLine($"Balance: {curUser.balance}/{curUser.goal} {Math.Round(Perc())}% :Goal");
+            Console.WriteLine(curUser.balance >= curUser.goal ? "You made it!" : "You can do it!");
+            Console.Write("'exit'\nSet your goal: ");
+            string goa = Console.ReadLine(); if (goa.ToLower() == "exit") break;
+            if (!decimal.TryParse(goa.ToString(), out decimal goal)) { Console.WriteLine("Numbers only"); C(); continue; }
+            curUser.goal = goal; Console.WriteLine($"Goal set to {goal}"); C(); SaveFile("a"); continue;
+        }
+    }
+    public static void History()
+    {
+        while (true)
+        {
+            int id = 1;
+            Console.Clear();
+            if (curUser.trans.Count < 1) { Console.WriteLine("You have no history of transactions"); C(); break; }        
+            Console.WriteLine("(Enter) Exit\n(1) Search\n(2) Remove");
+            int m = Input(); if (m == -1 || m > 2) continue; if (m == -2) break;
+            if (m == 1) { Search(); continue; }
+            if (m == 2)
+            {
+                Console.Clear();
+                foreach (var x in curUser.trans.OrderBy(k => k.date)) Console.WriteLine($"{id++}. {x.category}: {x.amount} | {x.note} [{x.date}]");
+                Console.Write("'back'\nChoose the transaction ID to remove: ");
+                string ww = Console.ReadLine(); if (ww.ToLower() == "back") continue;
+                if (!int.TryParse(ww, out int w) || w > curUser.trans.Count) continue;
+                var res = curUser.trans.OrderBy(k => k.date).ElementAt(w - 1);
+                Console.Write($"\nAre you sure you want to remove {res.category}: {res.amount}?\nType 'YES' to confirm: ");
+                String answer = Console.ReadLine();
+                if (answer != "YES") continue;
+                Console.WriteLine($"{res.category}: {res.amount} | {res.note} [{res.date}] removed"); C();
+                curUser.rtrans.Add(res); curUser.trans.Remove(res); SumBalance(); SaveFile("a"); break;
+            }
+        }
+    }
+    public static void Search()
+    {
+        while (true)
+        {
+            Console.Clear(); int id = 1;
+            Console.WriteLine("Choose a search type:\n(1) Category\n(2) Amount\n(3) Date\n(4) Newest\n(5) Oldest\n(Enter) Back");
+            int w = Input(); if (w == -2) break;
+            if (w == 1)
+            {
+                Console.Clear(); Console.Write("'back'\nSearch Category: ");
+                String search = Console.ReadLine(); if (search.ToLower() == "back") continue;
+                var match = curUser.trans.Where(k => k.category.StartsWith(search, StringComparison.OrdinalIgnoreCase));
+                if (!match.Any()) { Console.WriteLine($"No category that starts with: {search}"); C(); continue; }
+                foreach (var x in match.OrderBy(k => k.category)) Console.WriteLine($"{id++}. {x.category}: {x.amount} | {x.note} [{x.date}]");
+                Console.ReadKey(); id = 1;
+            }
+            if (w == 2)
+            {
+                Console.Clear(); Console.Write("'back'\nSearch Amount: ");
+                String searc = Console.ReadLine(); if (searc.ToLower() == "back") continue;
+                if (!decimal.TryParse(searc.ToString(), out decimal search)) continue;
+                var match = curUser.trans.Where(k => k.amount == search);
+                if (!match.Any()) { Console.WriteLine($"No transactions with the amount: {search}"); C(); continue; }
+                foreach (var x in match) Console.WriteLine($"{id++}. {x.category}: {x.amount} | {x.note} [{x.date}]");
+                Console.ReadKey(); id = 1;
+            }
+            if (w == 3)
+            {
+                Console.Clear(); Console.Write("'back'\n('dd-MM-yyyy')\nSearch Date: ");
+                String searc = Console.ReadLine(); if (searc.ToLower() == "back") continue;
+                if (!DateTime.TryParseExact(searc, "dd-MM-yyyy", CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime search)) continue;
+                var match = curUser.trans.Where(k => k.date.Date == search);
+                if (!match.Any()) { Console.WriteLine($"No transactions occurred in: {search}"); C(); continue; }
+                foreach (var x in match) { Console.WriteLine($"{id++}. {x.category}: {x.amount} | {x.note} [{x.date}]"); }
+                Console.ReadKey(); id = 1;
+            }
+            if (w == 4)
+            {
+                Console.Clear(); foreach (var x in curUser.trans.OrderByDescending(k => k.date))
+                { Console.WriteLine($"{id++}. {x.category}: {x.amount} | {x.note} [{x.date}]"); }
+                Console.Write("Press any key to continue..."); Console.ReadKey(true); continue;
+            }
+            if (w == 5)
+            {
+                Console.Clear(); foreach (var x in curUser.trans.OrderBy(k => k.date))
+                { Console.WriteLine($"{id++}. {x.category}: {x.amount} | {x.note} [{x.date}]"); }
+                Console.Write("Press any key to continue..."); Console.ReadKey(true); continue;
+            }
+        }                              
+    }
+    public static void Remove()
+    {
+        while (true)
+        {
+            ShowUser();
+            Console.Write("'exit' to go back\nAre you sure you want to remove your user?\nType 'YES' to remove: ");
+            string answer = Console.ReadLine();
+            if (answer.ToLower() == "exit") break;
+            if (answer.Trim() == "YES")
+            { Console.WriteLine($"{curUser.name} has been removed"); u.Remove(GU(curUser)); curUser = null; Arrange('a'); SaveFile("a"); break; }
+            Console.Clear();
+        }
+    }
+    public static int Input()
+    {
+        char asd = Console.ReadKey(true).KeyChar;
+        if (asd == '\r') return -2;
+        return !int.TryParse(asd.ToString(), out int sad) ? -1 : sad;
+    }
+    public static void Arrange(char o)
+    {
+        if (o == 'a')
+        {
+            Dictionary<int, User> a = new();
+            int aKey = 1;
+            foreach (var x in u.OrderBy(k => k.Key)) { a[aKey++] = x.Value; }
+            u = a;
+        }
+    }
+    public static String Password(String pass)
+    {
+        using var sha = SHA256.Create();
+        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(pass));
+        return Convert.ToHexString(bytes);
+    }
+    public static void SumBalance() { var res = curUser.trans.Sum(k => k.amount); var res2 = curUser.rtrans.Sum(k => k.amount); curUser.balance = res + res2; }
+    public static void ShowUser() { foreach (var x in u) { Console.WriteLine($"{x.Key}. {x.Value.name}"); } }
+    //public static User GetUser(int x) { return u.ContainsKey(x) ? u[x] : null; }
+    public static int GU(User x) { var res = u.FirstOrDefault(k => k.Value == x); return res.Key; }
+    public static decimal Perc() { if (curUser.goal < 1) return 100; decimal perc = (curUser.balance / curUser.goal) * 100; return Math.Min(100, perc); }
+    public static void Removed() { foreach (var x in curUser.rtrans) Console.WriteLine($"{x.category}: {x.amount} | {x.note} [{x.date}]"); C(); }
+    public static void C() { Thread.Sleep(800); Console.Clear(); }
+    public class User
+    {
+        public string name { get; set; }
+        public string password { get; set; }
+        public decimal balance { get; set; }
+        public decimal goal { get; set; }
+        public List<Transaction> rtrans { get; set; } = new();
+        public List<Transaction> trans { get; set; } = new();
+    }
+    public class Transaction
+    {
+        public decimal amount { get; set; }
+        public string category { get; set; }
+        public DateTime date { get; set; }
+        public string note { get; set; }
+    }
+    public class Save
+    {
+        public Dictionary<int, User> U { get; set; } = new();
+        public int CurID { get; set; }
+        public int UserKey { get; set; }
+        public Save() { }
+    }
+    public static void SaveFile(string path)
+    {
+        int curid = curUser == null ? -1 : GU(curUser);
+        var save = new Save { U = u, CurID = curid, UserKey = userKey };
+        var option = new JsonSerializerOptions { IncludeFields = true };
+        string json = JsonSerializer.Serialize(save, option);
+        File.WriteAllText(path, json);
+    }
+    public static void LoadFile(string path)
+    {
+        if (!File.Exists(path)) return;
+        string json = File.ReadAllText(path);
+        var res = JsonSerializer.Deserialize<Save>(json);
+        if (res != null)
+        {
+            u = res.U;
+            userKey = res.UserKey;
+            if (res.CurID != -1 && u.ContainsKey(res.CurID))
+            curUser = u[res.CurID];           
+        }
+    }
+}

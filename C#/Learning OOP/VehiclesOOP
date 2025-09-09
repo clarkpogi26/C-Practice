@@ -1,0 +1,355 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security;
+using System.Xml.Linq;
+using C__starter;
+
+namespace C__starter;
+class Program
+{
+    static void Main(string[] args)
+    {
+        SportsCar car = new();
+        OffRoadCar car2 = new();
+        Bike bike = new();
+        FishingBoat fishingboat = new();
+        CruiseShip cruiseship = new();
+        Airplane airplane = new();       
+        Helicopter helicopter = new();
+        FighterJet fighterjet = new();
+        AttackHelicopter attackhelicopter = new();
+        Warship warship = new();
+        List<Vehicle> vehicle = new() { car, car2, bike, fishingboat, airplane, helicopter, attackhelicopter, fighterjet, warship };
+        Dictionary<int, Vehicle> menu = new() { { 1, car }, { 2, car2 }, { 3, bike }, { 4, fishingboat }, { 5, cruiseship }, { 6, airplane }, { 7, helicopter }, { 8, fighterjet }, { 9, attackhelicopter }, { 0, warship } };
+        while (true)
+        {
+            foreach (var item in menu)
+            {
+                Console.WriteLine($"{item.Key}. {item.Value.Model}");
+            }
+            ConsoleKeyInfo prechoice = Console.ReadKey();
+            char choicee = prechoice.KeyChar;
+            if (int.TryParse(choicee.ToString(), out int choice) && choice >= 0 && choice <= menu.Count)
+            {
+                Drive(menu[choice]);
+            }
+            else
+            {
+                Console.Clear();
+                Console.WriteLine("Invalid Input");
+                continue;
+            }
+        }
+    }
+    static void Drive(Vehicle v)
+    {
+        Console.Clear();
+        Console.WriteLine($"=== {v} ===");
+        v.Start();
+        v.Turn("Right");
+        v.Accelerate(100);
+        v.Ability();
+        if (v is ILand vl) vl.Brake();
+        if (v is IRoad vr) vr.Refuel();
+        if (v is IOffRoad vo) vo.CrawlRock();
+        if (v is ISea vs) vs.Anchor();
+        if (v is IAir va) va.Land();
+        if (v is IBattle vba) vba.Attack();
+        if (v is Bike vb) vb.LeanCorner();
+        if (v is AttackHelicopter vat) vat.LAS();
+        if (v is FighterJet vfj) vfj.Radar();
+        if (v is CruiseShip vcr) vcr.WaterPark();
+        if (v is Warship vwa) vwa.RadarSonar();
+        v.Stop();
+        Console.WriteLine();
+    }
+    abstract public class Vehicle
+    {
+        private Engine _engine = new Engine();
+        private string _model;
+        private int _seat;
+        private int _speed;
+        public abstract void Ability();
+        public void Start() => _engine.StartEngine();
+        public void Stop() => _engine.StopEngine();
+        public void Accelerate(int accSpeed)
+        {
+            Console.WriteLine($"{_model} can accelerate at {_speed}mph");
+        }
+        public void Turn(String direction)
+        {
+            Console.WriteLine($"{_model} is turning {direction}");
+        }
+        public String Model
+        {
+            get => _model;
+            set => _model = value;
+        }
+        public int Speed
+        {
+            get => _speed; 
+            set => _speed = value; 
+        }
+        public int Seat
+        {
+            get => _seat;
+            set => _seat = value;
+        }
+        public override string ToString()
+        {
+            return $"{GetType().Name} : {Model} ({_seat} capacity) ({Speed} mph)";
+        }
+    }
+    public class Engine
+    {
+        public void StartEngine() => Console.WriteLine($"engine currently running");
+        public void StopEngine() => Console.WriteLine($"engine currently not running");
+    }
+    public interface ILand
+    {
+        void Brake();
+    }
+    public interface ISea
+    {
+        void Anchor();
+    }
+    public interface IAir
+    {
+        void Land();
+    }
+    public interface IRoad
+    {
+        void Refuel();
+    }
+    public interface IOffRoad
+    {
+        void CrawlRock();
+    }
+    public interface IBattle
+    {
+        void Attack();
+    }
+    public abstract class Car : Vehicle, ILand, IRoad
+    {
+        public Car(String model, int speed, int seat)
+        {
+            Model = model;
+            Speed = speed;
+            Seat = seat;
+        }
+        public abstract override void Ability();
+        public void Brake()
+        {
+            Console.WriteLine($"{Model} have a break");
+        }
+        public void Refuel()
+        {
+            Console.WriteLine($"{Model} can refuel");
+        }
+    }
+    public class SportsCar : Car
+    {
+        public SportsCar() : base("Ford Mustang GT", 155, 4)
+        {
+
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model} can drift");
+        }
+    }
+    public class OffRoadCar : Car, IOffRoad
+    {
+        public OffRoadCar() : base("Land Rover Defender 110 X-Dynamic SE", 119, 7)
+        {
+
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model} can sense the terrain");
+        }
+        public void CrawlRock()
+        {
+            Console.WriteLine($"{Model} can course through rocks");
+        }
+    }
+    public class Bike : Vehicle, ILand, IRoad
+    {
+        public Bike()
+        {
+            Model = "Kawasaki Ninja ZX-6R";
+            Speed = 160;
+            Seat = 2;
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model} have a stand");
+        }
+        public void Brake()
+        {
+            Console.WriteLine($"{Model} have a break");
+        }
+        public void Refuel()
+        {
+            Console.WriteLine($"{Model} can refuel");
+        }
+        public void LeanCorner()
+        {
+            Console.WriteLine($"{Model} can lean on corners");
+        }
+    }
+    public abstract class Boat : Vehicle, ISea
+    {
+        public Boat(String model, int speed, int seat)
+        {
+            Model = model;
+            Speed = speed;
+            Seat = seat;
+        }
+        public abstract override void Ability();
+        public abstract void Anchor();
+    }
+    public class FishingBoat : Boat
+    {
+        public FishingBoat() : base("Boston Whaler 280 Outrage", 58, 12)
+        {
+            
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model} can fish");
+        }
+        public override void Anchor()
+        {
+            Console.WriteLine($"{Model} have an anchor");
+        }
+    }
+    public class CruiseShip : Boat
+    {
+        public CruiseShip() : base("Icon of the Seas", 25, 7600)
+        {
+
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model} can literally be a town");
+        }
+        public override void Anchor()
+        {
+            Console.WriteLine($"{Model} have multiple anchors");
+        }
+        public void WaterPark()
+        {
+            Console.WriteLine($"{Model} have the largest waterpark at sea");
+        }
+    }
+    public class Warship : Boat, IBattle
+    {
+        public Warship() : base("Arleigh Burke-class (Flight IIA variant)", 40, 300)
+        {
+            
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model}");
+        }
+        public override void Anchor()
+        {
+            Console.WriteLine($"{Model} have 2 anchors");
+        }
+        public void Attack()
+        {
+            Console.WriteLine($"{Model} carries up to 96 Mk 41 cells (6×8-packs in Flight IIA) for SM‑2, SM‑6, Tomahawk, ASROC, ESSM\n5 in (127 mm) Mk 45 gun (Mod 1/2 or Mod 4), 2× Mk 15 Phalanx Close-In Weapon Systems for missile defense\nMk 32 triple-tube launchers ×2 (fires Mk 46/50/54 lightweight torpedoes), 2× Mk 141 launchers (8 × RGM‑84 Harpoon anti-ship missiles) on early flights");
+        }
+        public void RadarSonar()
+        {
+            Console.WriteLine($"{Model} have AN/SPY-1D 3D radar, AN/SQS-53C hull sonar, AN/SQR-19 towed sonar array");
+        }
+    }
+    public class Airplane : Vehicle, IAir
+    {
+        public Airplane()
+        {
+            Model = "Cessna 172 Skyhawk";
+            Speed = 140;
+            Seat = 4;
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model} can glide");
+        }
+        public virtual void Land()
+        {
+            Console.WriteLine($"{Model} can land on an airport");
+        }
+    }
+    public class FighterJet : Airplane, IBattle
+    {
+        public FighterJet()
+        {
+            Model = "F/A-18E Super Hornet";
+            Speed = 1190;
+            Seat = 1;
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model} can fold its wings");
+        }
+        public override void Land()
+        {
+            Console.WriteLine($"{Model} can land on an aircraft");
+        }
+        public void Attack()
+        {
+            Console.WriteLine($"{Model} carries AIM-9, AIM-20 missiles, JDAM bombs, HARMs, tanks");
+        }
+        public void Radar()
+        {
+            Console.WriteLine($"{Model} have AN/APG-79 AESA radar");
+        }
+    }
+    public class Helicopter : Airplane
+    {
+        public Helicopter()
+        {
+            Model = "Bell 407";
+            Speed = 160;
+            Seat = 7;
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model} can hover");
+        }
+        public override void Land()
+        {
+            Console.WriteLine($"{Model} can land on a helipad");
+        }
+    }
+    public class AttackHelicopter : Helicopter, IBattle
+    {
+        public AttackHelicopter()
+        {
+            Model = "AH-64E Apache Guardian";
+            Speed = 182;
+            Seat = 2;
+        }
+        public override void Ability()
+        {
+            Console.WriteLine($"{Model} have an advanced thermal, infrared and night vision targeting system");
+        }
+        public override void Land()
+        {
+            Console.WriteLine($"{Model} can land in a military base");
+        }
+        public void LAS()
+        {
+            Console.WriteLine($"{Model} have a 'Look, aim, shoot'");
+        }
+        public void Attack()
+        {
+            Console.WriteLine($"{Model} carries a mix of Hellfire missiles, Hydra 70 rockets, and a 30mm M230 chain gun");
+        }
+    }
+}

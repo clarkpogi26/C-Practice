@@ -1,0 +1,35 @@
+using System;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        string secretWord = "giraffe";
+        string guess = "";
+        int guessCount = 0;
+        bool outOfGuesses = false;
+
+        while (guess != secretWord && guessCount <= 5)
+        {
+            Console.Write("Guess the word: ");
+            guess = Console.ReadLine();
+
+            if (guess == secretWord)
+            {
+                guessCount++;
+                Console.WriteLine("You guessed it!");
+                Console.WriteLine("Your guess count: " + guessCount);
+            }
+            else if (guessCount == 5)
+            {
+                Console.WriteLine("You ran out of guesses...\nBetter Luck Next Time!");
+                guessCount++;
+            }
+            else
+            {
+                Console.WriteLine("Wrong");
+                guessCount++;
+            }
+        }
+    }
+}

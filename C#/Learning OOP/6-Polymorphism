@@ -1,0 +1,59 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Xml.Linq;
+using C__starter;
+
+namespace C__starter
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            car car = new car();
+            bicycle bicycle = new bicycle();
+            boat boat = new boat();
+            car.setName("Mustang GT");
+            bicycle.setName("Mountain Bike");
+            boat.setName("Slice of Life");
+
+            vehicle[] vehicles = { car, bicycle, boat };
+            foreach (vehicle i in vehicles)
+            {
+                i.go();
+            }
+        }
+    }
+    class vehicle
+    {
+        public String name;
+        public virtual void go()
+        {
+            
+        }
+        public void setName(String name)
+        {
+            this.name = name;
+        }
+    }
+    class car : vehicle
+    {
+        public override void go()
+        {
+            Console.WriteLine($"The {name} is running");
+        }
+    }
+    class bicycle : vehicle
+    {
+        public override void go()
+        {
+            Console.WriteLine($"The {name} is running");
+        }
+    }
+    class boat : vehicle
+    {
+        public override void go()
+        {
+            Console.WriteLine($"The {name} is running");
+        }
+    }
+}

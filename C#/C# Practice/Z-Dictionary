@@ -1,0 +1,38 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Xml.Linq;
+using System.Collections.Generic;
+using C__starter;
+
+namespace C__starter;
+class Program
+{
+    static void Main(string[] args)
+    {
+        Dictionary<int, String> rookies = new();
+        rookies.Add(2000, "Mike Miller");
+        rookies.Add(2001, "John Doe");
+        rookies.Add(2002, "Jane Doe");
+        rookies.Add(2003, "John Smith");
+        Console.WriteLine(rookies[2002]);
+        if (rookies.ContainsKey(2002))
+        {
+            Console.WriteLine(rookies[2002]);
+        }
+
+        Dictionary<String, List<String>> wishLists = new();
+        wishLists.Add("Tim Corey", new List<String> { "Xbox", "Tesla", "Pizza" });
+        wishLists.Add("Billy Bob", new List<String> { "PS5", "Ford", "Hoagie" });
+        wishLists.Add("Marry Jane", new List<String> { "House", "Car", "Sub" });
+        Console.WriteLine(wishLists["Tim Corey"][1]); // Tesla
+
+        foreach (var (key, value) in wishLists)
+        {
+            Console.WriteLine($"{key}'s Wishlists:");
+            foreach (var items in value)
+            {
+                Console.WriteLine($"\t{items}");
+            }
+        }
+    }
+}

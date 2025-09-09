@@ -1,0 +1,592 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security;
+using System.Xml.Linq;
+using System.Diagnostics;
+using C__starter;
+using static C__starter.Program;
+using System.ComponentModel.DataAnnotations;
+using System.Drawing;
+using System.Security.Cryptography.X509Certificates;
+using System.Numerics;
+using System.Text;
+
+namespace C__starter;
+class Program
+{
+    static Random rnd = new();
+    static void Main(string[] args)
+    {
+        int burns = 0;
+        int egg = 0;
+        bool revived = false;
+        bool switchTurn = true;
+        bool isPoisoned = false;
+        Player player = new();
+        Monk monk = new();
+        Scholar scholar = new();
+        Valkyrie valkyrie = new();
+        Thief thief = new();
+        Archer archer = new();
+        Dreadplate dreadplate = new();
+        Vampire vampire = new();
+        Phoenix phoenix = new();
+        Blessed blessed = new();
+        Dictionary<int, Fighter> enemies = new() { { 1, monk.GetFighter() }, { 2, scholar.GetFighter() }, { 3, valkyrie.GetFighter() }, { 4, thief.GetFighter() }, { 5, archer.GetFighter() }, { 6, dreadplate.GetFighter() }, { 7, vampire.GetFighter() }, { 8, phoenix.GetFighter() }, { 9, blessed.GetFighter() } };
+        foreach (var f in enemies)
+        {
+            Console.WriteLine($"{f.Key}. {f.Value.Name}\t{f.Value.Title}");
+        }
+        int choicez; // I have to declare the this variable outside and before the While loop so it's not limited within its scope
+        while (true)
+        {
+            ConsoleKeyInfo asd = Console.ReadKey(true);
+            char final = asd.KeyChar; // int.TryParse expects a string so we need to convert it .ToString() before we convert it back as as int to choicez
+            if (char.IsDigit(final) && int.TryParse(final.ToString(), out choicez) && enemies.ContainsKey(choicez))
+            {
+                break;
+            }
+            Console.WriteLine("Invalid input. Try Again: ");
+        }
+        Fighter enemy = enemies[choicez]; // We use Fighter class as a value type so we can store the Data of our chosen fighter
+        Console.WriteLine($"You have chosen {enemy.Name} as an opponent");
+        while (true)
+        {
+            int RNG = rnd.Next(1, 100);
+            int GNR = rnd.Next(1, 100);
+            if (switchTurn == true)
+            {
+                if (player.Stunned == true)
+                {
+                    Console.WriteLine("You are currently stunned");
+                    switchTurn = false;
+                    continue;
+                }
+                if (enemy.Name == "Wu")
+            {
+                if (enemy.Health <= 150) enemy.Wu();
+            }
+            if (enemy.Name == "Lilineth")
+            {
+                if (RNG <= 30)
+                    switchTurn = false;
+                else
+                    switchTurn = true;
+                if (RNG >= 85 && player.PlayerHeals >= 1)
+                {
+                    player.PlayerHeals--;
+                    enemy.Lili();
+                }
+                if (GNR <= 20)
+                {
+                    isPoisoned = true;
+                    Console.WriteLine($"{enemy.Name} poisoned you");
+                }
+                if (GNR >= 70 && isPoisoned)
+                {
+                    isPoisoned = false;
+                    Console.WriteLine($"{enemy.Name}'s poison naturally wore off");
+                }
+                else if (isPoisoned)
+                {
+                    Console.WriteLine($"you lost 23hp from {enemy.Name}'s poison");
+                    player.PlayerHealth -= 23;
+                }
+            }          
+                Color("darkblue");
+                Console.WriteLine($"Your Health: {player.PlayerHealth} | {enemy.Name}'s Health: {enemy.Health}");
+                Console.Write($"Your HP: {player.PlayerHealth}\t(Attack [Q])\t(Special [W])\t(Heal [E])\t(Run [R])\nChoose a move: ");
+                ConsoleKeyInfo prechoice = Console.ReadKey(true);
+                char choice = char.ToUpper(prechoice.KeyChar);
+                if (choice == 'Q')
+                {
+                    Color("red");
+                    int pAttack = player.pRollAttack();
+                    enemy.TakeDamage(pAttack);
+                    Console.WriteLine($"You attacked {enemy.Name}, {enemy.Name} lost {pAttack}hp [{enemy.Health}]");
+                    Clear();
+                }
+                else if (choice == 'W')
+                {
+                    int chance = rnd.Next(1, 3);
+                    if (chance == 1)
+                    {
+                        Console.WriteLine($"Your special failed");
+                        Clear();
+                        switchTurn = false;
+                        continue;
+                    }
+                    Color("magenta");
+                    int pSpecial = player.pRollSpecial();
+                    enemy.TakeDamage(pSpecial);
+                    Console.WriteLine($"You slashed {enemy.Name}, {enemy.Name} lost {pSpecial}hp [{enemy.Health}]");
+                    Clear();
+                }
+                else if (choice == 'E')
+                {
+                    Color("green");
+                    if (player.PlayerHeals <= 0)
+                    {
+                        Console.WriteLine("You ran out of heals");
+                        Clear();
+                        continue;
+                    }
+                    player.PlayerHeals--;
+                    int pHeal = player.pRollHeal();
+                    player.PlayerHealth += pHeal;
+                    Console.WriteLine($"You used heal, You gained {pHeal}hp [{player.PlayerHealth}] (heals: {player.PlayerHeals})");
+                    Clear();
+                }
+                else if (choice == 'R')
+                {
+                    Color("yellow");
+                    Console.WriteLine("\nYou ran away!");
+                    Clear();
+                    break;
+                }
+                else if (choice == 's')
+                    Console.WriteLine("Nothing");
+                switchTurn = false;
+            }
+            if (switchTurn == false)
+            {
+                while (true)
+                {
+                    if (player.Stunned) player.Stunned = false;
+                    if (revived == true && egg <= 2)
+                    {
+                        egg++;
+                        Color("yellow");
+                        Dictionary<int, string> fquote = new() { { 1, "The egg remains unhatched" }, { 2, "You see a crack on the egg" }, { 3, "Flarix is reborn" } };
+                        Console.WriteLine(fquote[egg]);
+                        break;
+                    }
+                    int burndmg = rnd.Next(18, 24);
+                    if (burns >= 1)
+                    {
+                        player.PlayerHealth -= burndmg;
+                        Console.WriteLine($"You lost {burndmg} from burn damage");
+                    }
+                    int move = enemyMove();
+                    if (enemy.Name == "Gwendolyn" && enemy.Health <= 100 && enemy.Heals != 0)
+                    {
+                        move = 1;
+                    }
+                    if (enemy.Name == "Hildegard")
+                    {
+                        if (RNG >= 50)
+                            move = 3;
+                    }
+                    if (enemy.Name == "Flarix" && enemy.Health == 0 && !revived)
+                    {
+                        revived = true;
+                        Beep('g');
+                        enemy.Reborn();
+                    }
+                    if (move == 1)
+                    {
+                        if (enemy.Heals >= 1)
+                        { // I have to store it in a variable so it doesnt roll enemyHeal() twice
+                            int enemyHealz = enemy.enemyHeal();
+                            Color("green");
+                            Console.WriteLine($"{enemy.Name} used heal, {enemy.Name} gained {enemyHealz}hp");
+                            Clear();
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    if (move == 2)
+                    {
+                        if (enemy.Name == "Darien" && GNR <= 50)
+                        {
+                            player.AttackMin -= 3;
+                            player.AttackMax -= 3;
+                            player.SpecialMin -= 3;
+                            player.SpecialMax -= 3;                           
+                            Console.WriteLine($"{enemy.Name} reduced your damage by 3");
+                        }
+                        Color("red");
+                        int enemyAttack = enemy.rollAttack();
+                        player.PlayerHealth -= enemyAttack;
+                        player.PlayerHealth = Math.Max(0, player.PlayerHealth);
+                        Console.WriteLine($"{enemy.Name} attacked you, You lost {enemyAttack}hp");
+                        Clear();
+                    }
+                    else if (move == 3)
+                    {
+                        Color("magenta");
+                        if (RNG <= 25 || RNG >= 75)
+                        {
+                            Console.WriteLine($"{enemy.Name}'s {enemy.Special} failed");
+                            Clear();
+                            break;
+                        }
+                        else
+                        {
+                            if (enemy.Name == "Flarix") burns++;
+                            if (enemy.Name == "Clyde") enemy.Blessing();
+                            if (enemy.Name == "Darien") player.Stunned = true;                      
+                            if (enemy.Name == "Vladius")
+                            {
+                                int enemySpecial = enemy.rollSpecial();
+                                player.PlayerHealth -= enemySpecial;
+                                enemy.Vlad(enemySpecial);
+                                player.PlayerHealth = Math.Max(0, player.PlayerHealth);
+                                Console.WriteLine($"{enemy.Name}'s {enemy.Special} hit you, You lost {enemySpecial}hp\n{enemy.Name} gained {enemySpecial} from you");
+                                Clear();
+                            }
+                            else
+                            {
+                                int enemySpecial = enemy.rollSpecial();
+                                player.PlayerHealth -= enemySpecial;
+                                player.PlayerHealth = Math.Max(0, player.PlayerHealth);
+                                Console.WriteLine($"{enemy.Name}'s {enemy.Special} hit you, You lost {enemySpecial}hp");
+                                Clear();
+                            }
+                        }
+                    }
+                    break;
+                }              
+                if (enemy.Name == "Faradim")
+                {
+                    Color("darkgray");
+                    Console.WriteLine($"{enemy.Name}'s miasmic dark energy sorrounds you\nYou lost 10hp");
+                    player.PlayerHealth -= 10;
+                }
+                if (enemy.Name == "Flarix" && enemy.Health != 0)
+                {
+                    Color("yellow");
+                    int phHeal = enemy.enemyHeal();
+                    Console.WriteLine($"{enemy.Name}'s Ember's Embrace gained him {phHeal}hp");
+                }
+                switchTurn = true;
+                if (enemy.Health == 0 || player.PlayerHealth <= 0)
+                {
+                    Ending(player.PlayerHealth, enemy);
+                    Console.Write($"Would you like to try again? (y/n)");
+                    ConsoleKeyInfo yn = Console.ReadKey(true);
+                    char ny = yn.KeyChar;
+                    if (ny == 'y')
+                    {
+                        Console.Clear();
+                        enemy.minmaxres();
+                        enemy.enemyReset();
+                        player.PlayerReset();
+                        switchTurn = true;
+                        revived = false;
+                        burns = 0;
+                        egg = 0;
+                        continue;
+                    }
+                    Console.Write("it's a nice journey");
+                    break;
+                }
+            }
+        }
+    }
+    public static void Beep(char xo)
+    {
+        if (xo == 'x')
+        {
+            int[] notes = { 300, 400, 500, 600, 700, 800, 950, 1100, 1300, 1500, 1700, 1900, 2100, 2300, 2500, 2600 }; // rising pitch
+            foreach (int freq in notes)
+            {
+                Console.Beep(freq, 100);
+                if (freq == 1500 || freq == 1700 || freq == 1900)
+                {
+                    Console.Beep(freq, 500);
+                    if (freq == 2300)
+                        Console.Beep(freq, 1000);
+                }
+            }
+        }
+        else if (xo == 'o')
+        {
+            int[] noteo = { 2600, 2500, 2300, 2100, 1900, 1700, 1500, 1300, 950, 800, 700, 600, 500, 400, 300 };
+            foreach (int freqs in noteo)
+            {
+                Console.Beep(freqs, 100);
+                if (freqs == 500)
+                    Console.Beep(freqs, 1000);
+            }
+        }
+        else
+        {
+            int j = 0;
+            Dictionary<int, String> dias = new() { { 1, "Flarix has fallen..." }, { 2, "But silence follows..." },
+                { 3, "A quiet silence..." }, { 4, "Yet deafening..." }, { 5, "Suddenly, a burst of flame emanates his body..." },
+                { 6, "A fog of of smoke obscures his presence..." }, { 7, "But soon it clears up..." } };
+            int[] notez = { 3000, 2800, 2600, 2400, 1400, 1000, 500 };
+            foreach (int freqz in notez)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    Console.Beep(freqz, 100);
+                }
+                for (int o = 0; o < 1; o++)
+                {
+                    j++;
+                    Console.WriteLine(dias[j]);
+                    Console.Beep(freqz, 1000);
+                }
+            }
+            Console.Beep(3000, 3000);
+            Console.WriteLine("An egg appears before the player...");
+            Thread.Sleep(1000);
+        }
+    }
+    public static void Ending(int playerHealth, Fighter enemy) // everytime we access the chosen enemy, we use it's class as its own variable
+    {
+        if (enemy.Health == 0)
+        {
+            Color("darkgreen");
+            Beep('x');
+            Console.WriteLine("You Won");
+        }
+        else if (playerHealth == 0)
+        {
+            Color("darkred");
+            Beep('o');
+            Console.WriteLine("You Lost");
+        }
+    }
+    public class Fighter
+    {
+        public string Title { get; private set; } // You can only get the value but cannot set it
+        public string Name { get; private set; }
+        public string Special { get; private set; }
+        public int Health { get; private set; }
+        public int Heals { get; private set; }
+        private int minAttack, maxAttack, minSpecial, maxSpecial, minHeal, maxHeal;
+        public int savedHealth { get; private set; }
+        public int savedHeals { get; private set; }
+        public int savedMinAttack { get; private set; }
+        public int savedMaxAttack { get; private set; }
+        public Fighter(String title, String name, String special, int health, int minattack, int maxattack, int minspecial, int maxspecial, int minheal, int maxheal, int heals)
+        {
+            Title = title;
+            Name = name;
+            Health = health;
+            Heals = heals;
+            Special = special;
+            minAttack = minattack;
+            maxAttack = maxattack;
+            minSpecial = minspecial;
+            maxSpecial = maxspecial;
+            minHeal = minheal;
+            maxHeal = maxheal;
+            savedHealth = health;
+            savedHeals = heals;
+            savedMinAttack = minattack;
+            savedMaxAttack = maxattack;
+        }
+        public void Lili()
+        {
+            Heals++;
+            Console.WriteLine($"{Name} stole your heal\n{Name} got an additional heal");
+        }
+        public void Vlad(int blood)
+        {
+            Health += blood;
+        }
+        public void Blessing()
+        {
+            minAttack += 25;
+            maxAttack += 25;
+            Console.WriteLine($"{Name}'s sword has been blessed.\nHealth +25\nHeals + 1\nAttack +25");
+            Thread.Sleep(500);
+            Health += 25;
+            Heals++;
+        }
+        public void Wu()
+        {
+            minAttack = 65;
+            maxAttack = 95;
+            Console.WriteLine($"{Name}'s ancestors are guiding him");
+        }
+        public void minmaxres()
+        {
+            minAttack = savedMinAttack;
+            maxAttack = savedMaxAttack;
+        }
+        public int rollAttack() => rnd.Next(minAttack, maxAttack); // matching numbers for min and max
+        public int rollSpecial() => rnd.Next(minSpecial, maxSpecial);
+        public int rollHeal() => rnd.Next(minHeal, maxHeal);
+        public void TakeDamage(int Damage)
+        {
+            Health -= Damage;
+            if (Health < 0) Health = 0;
+        }
+        public int enemyHeal()
+        {
+            int zheal = rollHeal();
+            Health += zheal;
+            Heals--;
+            return zheal;
+        }
+        public void enemyReset()
+        {
+            Health = savedHealth;
+            Heals = savedHeals;
+        }
+        public void Reborn() => Health = savedHealth;
+    }
+    public static void Color(String color)
+    { // Converts the parameter string to Enum // ConsoleColor <- variable
+        if (Enum.TryParse(color, true, out ConsoleColor result))
+        { // it makes exception cause of ^true^
+            Console.ForegroundColor = result;
+        }
+    } // static cause theyre independent
+    public static int enemyMove()
+    {
+        int move = rnd.Next(1, 4);
+        return move;
+    }
+    public static void Clear()
+    {
+        Thread.Sleep(1000);
+        Console.Clear();
+    }
+    public class Player
+    {
+        public Player()
+        {
+            savedMinAttack = attackMin;
+            savedMaxAttack = attackMax;
+            savedMinSpecial = specialMin;
+            savedMaxSpecial = specialMax;
+            savedMinHeal = healMin;
+            savedMaxHeal = healMax;
+            savedHealth = playerHealth;
+            savedHeals = playerHeals;
+        }
+        private bool stunned = false;
+        private int playerHealth = 1000;
+        private int playerHeals = 3;
+        private int attackMin = 35;
+        private int attackMax = 50;
+        private int specialMin = 55;
+        private int specialMax = 90;
+        private int healMin = 46;
+        private int healMax = 56;
+        private int savedMinAttack;
+        private int savedMaxAttack;
+        private int savedMinSpecial;
+        private int savedMaxSpecial;
+        private int savedMinHeal;
+        private int savedMaxHeal;
+        private int savedHealth;
+        private int savedHeals;
+        public int pRollAttack() => rnd.Next(attackMin, attackMax);
+        public int pRollSpecial() => rnd.Next(specialMin, specialMax);
+        public int pRollHeal() => rnd.Next(healMin, healMax);
+        public void PlayerReset()
+        {
+            attackMin = savedMinAttack;
+            attackMax = savedMaxAttack;
+            specialMin = savedMinSpecial;
+            specialMax = savedMaxSpecial;
+            healMin = savedMinHeal;
+            healMax = savedMaxHeal;
+            playerHealth = savedHealth;
+            playerHeals = savedHeals;
+            stunned = false;
+        }
+        public bool Stunned
+        {
+            get => stunned;
+            set => stunned = value;
+        }
+        public int PlayerHealth // just variable with value (ignore the public)
+        {
+            get => playerHealth;
+            set => playerHealth = value;
+        }
+        public int PlayerHeals
+        {
+            get => playerHeals;
+            set => playerHeals = value;
+        }
+        public int AttackMin
+        {
+            get => attackMin;
+            set => attackMin = value;
+        }
+        public int AttackMax
+        {
+            get => attackMax;
+            set => attackMax = value;
+        }
+        public int SpecialMin
+        {
+            get => specialMin;
+            set => specialMin = value;
+        }
+        public int SpecialMax
+        {
+            get => specialMax;
+            set => specialMax = value;
+        }
+        public int HealMin
+        {
+            get => healMin;
+            set => healMin = value;
+        }
+        public int HealMax
+        {
+            get => healMax;
+            set => healMax = value;
+        }
+    }
+    public class Monk
+    {
+        private Fighter f = new("The Eastern Wanderer", "Wu", "Yin-Yang", 250, 35, 45, 65, 85, 100, 120, 1);
+        public Fighter GetFighter() => f;
+    } // can't make this void, to return Fighter
+    public class Scholar
+    {
+        private Fighter f = new("Caduceus' Apprentice", "Gwendolyn", "Redeeming Light", 150, 20, 25, 60, 75, 68, 118, 11);
+        public Fighter GetFighter() => f;
+    }
+    public class Valkyrie
+    {
+        private Fighter f = new("The Zweihänderer", "Hildegard", "Deadly Counter", 280, 26, 36, 80, 130, 30, 50, 2);
+        public Fighter GetFighter() => f;
+    }
+    public class Thief
+    {
+        private Fighter f = new("Felony Feline", "Lilineth", "Feral Pounce", 160, 30, 39, 42, 63, 39, 53, 3);
+        public Fighter GetFighter() => f;
+    }
+    public class Archer
+    {
+        private Fighter f = new("Silent Owl", "Darien", "Piercing Gale", 190, 32, 42, 50, 70, 39, 53, 4);
+        public Fighter GetFighter() => f;
+    }
+    public class Dreadplate
+    {      // Calling and creating
+        private Fighter f = new("The Unbroken", "Faradim", "Intimidating Aura", 660, 15, 25, 33, 44, 8, 18, 0);
+        public Fighter GetFighter() => f;
+    }    // ^^ Variable ^^ to get the Fighter's data   
+    public class Vampire
+    {
+        private Fighter f = new("Volkoryn's Myth", "Vladius", "Whispering Crimson", 400, 40, 55, 30, 45, 30, 45, 4);
+        public Fighter GetFighter() => f;
+    }
+    public class Phoenix
+    {
+        private Fighter f = new("Ashborne", "Flarix", "Blazing Talon", 220, 28, 50, 35, 60, 8, 14, 0);
+        public Fighter GetFighter() => f;
+    }
+    public class Blessed
+    {  // We are essentially using the GetFighter() method to get the f data
+        private Fighter f = new("The Chosen One", "Clyde", "Goddess' Blessing", 230, 20, 30, 40, 50, 66, 88, 3);
+        public Fighter GetFighter() => f;
+    }
+}

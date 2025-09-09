@@ -1,0 +1,36 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Xml.Linq;
+using System.Collections.Generic;
+using C__starter;
+
+namespace C__starter;
+class Program
+{
+    static void Main(string[] args)
+    {
+        List<String> food = new List<String>();
+
+        food.Add("pizza");
+        food.Add("hamburger");
+        food.Add("hotdog");
+        food.Add("fries");
+
+        Console.WriteLine(food[0]); <shows the food with the index of [0]>
+        food.Remove("hotdog"); <removes the "hotdog"
+        food.Insert(0, "sushi"); <replaces the current [0] to "sushi"
+        Console.WriteLine(food.Count); <counts the list>
+        Console.WriteLine(food.IndexOf("pizza")); <shows the index of>
+        Console.WriteLine(food.LastIndexOf("fries")); <if theres 2 fries>
+        Console.WriteLine(food.Contains("pizza")); <returns a boolean value>
+        food.Sort(); <alphabetically sort>
+        food.Reverse(); <reverse the order>
+        food.Clear(); <clears the list>
+        String[] foodArray = food.ToArray(); <turns it into an array>
+        
+        foreach (String item in food)
+        {
+            Console.WriteLine(item);
+        }
+    }
+}

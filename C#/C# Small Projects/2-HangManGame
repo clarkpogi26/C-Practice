@@ -1,0 +1,339 @@
+using System.Threading;
+using System;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Random rnd = new Random();
+        int choic3 = 0;
+        int lives = 7;
+        int streak = 0;
+        string[] word = [];
+        string[] stages = new string[]
+        {
+    @"
+   _______
+   |/    
+   |    
+   |    
+   |    
+   |
+___|___",
+
+    @"
+   _______
+   |/    |
+   |    
+   |    
+   |    
+   |
+___|___",
+
+    @"
+   _______
+   |/    |
+   |    ()
+   |    
+   |
+___|___",
+
+    @"
+   _______
+   |/    |
+   |    ()
+   |     |
+   |    
+   |
+___|___",
+
+    @"
+   _______
+   |/    |
+   |    ()
+   |    /|
+   |    
+   |
+___|___",
+
+    @"
+   _______
+   |/    |
+   |    ()
+   |    /|\
+   |    
+   |
+___|___",
+
+    @"
+   _______
+   |/    |
+   |    ()
+   |    /|\
+   |    / 
+   |
+___|___",
+
+    @"
+   _______
+   |/    |
+   |    ()     
+   |    /|\
+   |    / \
+   |
+___|___"};
+        while (true)
+        {
+            Console.Write("Your friend is about to get hanged!\nShow off your vocabulary skills to save your friend!\nChoose a Difficulty:\nEasy = (1)\nMedium = (2)\nHard = (3)");
+            ConsoleKeyInfo difficulty = Console.ReadKey(true);
+            char dif = char.ToLower(difficulty.KeyChar);
+            if (!int.TryParse(dif.ToString(), out int diff) || diff > 3) { Console.WriteLine("Invalid"); continue; }
+            choic3 = diff;
+            break;
+        }
+        if (choic3 == 1)
+        {
+            string[] easyWord = {
+    "apple", "beach", "candy", "demon", "eagle", "flame", "grape", "honey", "input", "jelly",
+    "knife", "lemon", "magic", "night", "ocean", "piano", "quiet", "river", "spice", "tiger",
+    "under", "vivid", "whale", "xenon", "yield", "zebra", "alarm", "blush", "crisp", "dream",
+    "event", "fairy", "glide", "haunt", "ideal", "jumpy", "karma", "light", "motel", "nurse",
+    "orbit", "pearl", "queen", "royal", "scale", "tough", "unity", "vigor", "waltz", "xylol",
+    "yacht", "zesty", "angle", "brave", "chess", "drift", "elbow", "fresh", "gloom", "haste",
+    "index", "jewel", "koala", "latch", "mirth", "nerdy", "oxide", "punch", "quest", "roast",
+    "shine", "trend", "unite", "vocal", "wound", "xenon", "young", "zonal", "agent", "blaze",
+    "charm", "ditch", "elite", "fuzzy", "giant", "hatch", "irony", "jaunt", "kneel", "lunar",
+    "mango", "nifty", "ounce", "pride", "quirk", "rebel", "sword", "thick", "urban", "vixen"
+};
+            word = easyWord;
+        }
+        else if (choic3 == 2)
+        {
+            string[] mediumWord = {
+    "basketball", "atmosphere", "brainstorm", "background", "bookkeeper",
+    "chalkboard", "classified", "compliment", "commercial", "compromise",
+    "contractor", "controller", "confidence", "considerate", "declaration",
+    "dependable", "discussion", "electronics", "eventually", "everything",
+    "expression", "fascinated", "foundation", "friendship", "generation",
+    "government", "grandparent", "helicopter", "historical", "houseplant",
+    "illustrate", "importance", "incredible", "inspiration", "journalism",
+    "landscaper", "leadership", "lighthouse", "marketable", "motorcycle",
+    "newspaper", "nightstand", "opportunity", "overwhelmed", "paintbrush",
+    "perception", "permanent", "personally", "persuasive", "phenomenon",
+    "photograph", "playground", "possibility", "powerplant", "presidency",
+    "principles", "productive", "professional", "programmer", "projection",
+    "recreation", "refreshment", "regardless", "relationship", "remarkable",
+    "replacement", "republican", "resistance", "restaurant", "retirement",
+    "sacrifice", "satisfaction", "scientific", "settlement", "simplicity",
+    "snowblower", "spaceships", "spotlights", "stationary", "strawberry",
+    "structured", "subscribed", "successful", "superhuman", "techniques",
+    "television", "temperature", "thankfully", "theatrical", "tournament",
+    "transforms", "translation", "transparent", "transported", "travelling",
+    "trustworth", "typewriter", "understand", "vocabulary", "waterproof",
+    "wilderness", "windshield", "workaholic", "worrisome", "wristwatch"
+};
+            word = mediumWord;
+        }
+        else if (choic3 == 3)
+        {
+            string[] hardWord = {
+    "break the ice", "call it a day", "a piece of cake", "raining cats and dogs",
+    "hit the sack", "under the weather", "once in a while", "back to square one",
+    "kick the bucket", "bite the bullet", "out of the blue", "spill the beans",
+    "let the cat out", "a dime a dozen", "better late than never", "cut to the chase",
+    "hit the nail", "no pain no gain", "barking up wrong tree", "jump the gun",
+    "costs an arm", "go the extra mile", "cry over spilled milk", "pull someone's leg",
+    "let sleeping dogs lie", "go down in flames", "on thin ice", "piece of the pie",
+    "drop the ball", "a blessing in disguise", "easy as pie", "feeling blue",
+    "give the benefit", "once in a blue moon", "take it easy", "ring a bell",
+    "up in the air", "break a leg", "bite off more", "hit the road",
+    "keep your chin up", "speak of the devil", "head over heels", "burn the midnight oil",
+    "cut corners", "burn bridges", "face the music", "keep in touch",
+    "make a long story short", "miss the boat", "on cloud nine", "out of the woods",
+    "pull yourself together", "read between the lines", "see eye to eye",
+    "sit tight", "so far so good", "the ball is in your court", "the best of both worlds",
+    "the last straw", "throw in the towel", "turn a blind eye", "under your nose",
+    "walk in the park", "water under the bridge", "when pigs fly", "wrapped around finger",
+    "you can say that again", "zero tolerance", "actions speak louder", "all ears",
+    "back against wall", "by the book", "cold feet", "devil's advocate",
+    "down to earth", "go with the flow", "hang in there", "in the same boat",
+    "just what the doctor ordered", "let bygones be bygones", "make ends meet",
+    "nothing ventured nothing gained", "on the fence", "play it by ear",
+    "rule of thumb", "saved by the bell", "snowed under", "the icing on the cake",
+    "think outside box", "time flies", "turn the tables", "under the radar",
+    "up the ante", "walk on eggshells", "your guess is as good", "zip your lip"
+};
+            word = hardWord;
+        }
+        Console.Clear();
+        Console.WriteLine(stages[7 - lives]);
+        string chosenword = word[rnd.Next(word.Length)].ToLower();
+        bool win = false;
+        List<char> guessedLetter = new List<char>();
+        guessedLetter.Add(' '); // add the space already
+        while (lives > 0 && !win)
+        {
+            {
+                foreach (char x in chosenword)
+                {
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Console.Write(guessedLetter.Contains(x) ? $"{x} " : "_ ");
+                }// if the guessedletter contains a char in chosen word
+            }
+            Console.Write("\nType a letter: ");
+            Console.WriteLine($"Current Lives: {lives}");
+            ConsoleKeyInfo keysInfo = Console.ReadKey(true);
+            char guess = char.ToLower(keysInfo.KeyChar);
+
+            if (guessedLetter.Contains(guess)) // if the guessedletters contains our guess (so we dont repeat the same guess)
+                lives++;
+            List<char> guessedWrong = new List<char>();
+            foreach (char x in guessedLetter)
+            {// if our char in guessedletters is not in chosenword and already not in guessedwrong
+                if (!chosenword.Contains(x) && !guessedWrong.Contains(x))
+                    guessedWrong.Add(x);
+            }// if the chosenword contains our guess, & its not in guessedletter already
+            if (chosenword.Contains(guess) && !guessedLetter.Contains(guess))
+            {
+                Console.Beep(100, 100);
+                Console.Beep(300, 100);
+                Console.WriteLine("Correct!");
+            }
+            else// if the chosenword doesnt contain our guess and our guess is already in guessedletter
+            {
+                Console.Beep(500, 100);
+                Console.Beep(300, 100);
+                Console.WriteLine("Incorrect!");
+                lives--;
+            }
+            Console.Clear();
+            Console.WriteLine(stages[7 - lives]);
+            guessedLetter.Add(guess);
+            bool completed = true;
+
+            foreach (char x in chosenword)//loop thru each chars in chosenword
+                if (!guessedLetter.Contains(x))//if the guessedletters doesnt contain all chars in chosenword
+                    completed = false; // make completed a false if not satisfied
+            win = completed;
+            if (win)
+            {
+                streak++;
+                Console.Beep(100, 100);
+                Console.Beep(300, 100);
+                Console.Beep(500, 100);
+                Console.Beep(700, 100);
+                Console.Beep(900, 100);
+                Console.Beep(1100, 100);
+                Console.WriteLine($"{chosenword}\nYou Won!\nYour Streak: {streak}");
+                Console.Write("Play Again? (y/n)");
+                ConsoleKeyInfo keyInfo = Console.ReadKey();
+                char choice = keyInfo.KeyChar;
+                if (choice == 'y')
+                {
+                    lives = 7;
+                    win = false;
+                    Console.Clear();
+                    guessedLetter.Clear();
+                    guessedWrong.Clear();
+                    guessedLetter.Add(' ');
+                    chosenword = word[rnd.Next(word.Length)].ToLower();
+                    continue;
+                }
+                else if (choice == 'n')
+                {
+                    Console.Clear();
+                    Console.WriteLine("Thanks For Playing!");
+                    Thread.Sleep(1000);
+                }
+            }
+            else if (lives == 0)
+            {
+                while (true)
+                {
+                    Console.Beep(1100, 100);
+                    Console.Beep(900, 100);
+                    Console.Beep(700, 100);
+                    Console.Beep(500, 100);
+                    Console.Beep(300, 100);
+                    Console.Beep(100, 100);
+                    Console.WriteLine($"You Lost!\nYour Streak: {streak}\nThe Word: {chosenword}");
+                    Console.Write("Play Again? (y/n)");
+                    ConsoleKeyInfo keyzInfo = Console.ReadKey();
+                    char choize = keyzInfo.KeyChar;
+                    if (choize == 'y')
+                    {
+                        lives = 7;
+                        win = false;
+                        streak = 0;
+                        Console.Clear();
+                        guessedLetter.Clear();
+                        guessedWrong.Clear();
+                        guessedLetter.Add(' ');
+                        Console.WriteLine(stages[7 - lives]);
+                        chosenword = word[rnd.Next(word.Length)].ToLower();
+                        break;
+                    }
+                    else if (choize == 'n')
+                    {
+                        Console.Clear();
+                        Console.WriteLine("Thanks For Playing!");
+                        Thread.Sleep(1000);
+                        break;
+                    }
+                    else
+                    {
+                        Console.Clear();
+                        continue;
+                    }
+                }
+            }
+            Console.WriteLine(string.Join(", ", guessedWrong));// [, A]
+        }
+        /*    
+          ()|\           ()                  
+         /|\|->         __/\\
+          | |/              \
+         / \                /\
+
+
+          ()|\           ()
+         /|\|-->        __/\\
+          | |/              \
+         / \                /\
+
+
+          ()|\          () 
+         /|\|| -->     __/\\   
+          | |/             \
+         / \               /\
+
+
+
+          ()|\         ()
+         /|\||   -->  __/\\   
+          | |/            \
+         / \              /\
+
+
+
+          ()|\        ()
+         /|\||    -->__/\\   
+          | |/           \
+         / \             /\
+
+
+          ()|\      () -  >  
+         /|\||     \/\\ -   
+          | |/        \      
+         / \          /\   
+
+
+
+          ()|\ () 
+         /|\||__/\\ 
+          | |/    \      
+         / \      /\   
+        */
+
+    }
+}

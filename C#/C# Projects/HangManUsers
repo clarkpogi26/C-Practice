@@ -1,0 +1,368 @@
+using Microsoft.VisualBasic.FileIO;
+using System.Globalization;
+using System.IO.Compression;
+using System.Net.Sockets;
+using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+
+public class Program
+{
+    public static Dictionary<int, User> users = new();
+    public static int userKey = 1;
+    public static int Escore = 0;
+    public static int Mscore = 0;
+    public static int Hscore = 0;
+    public static int lives = 7;
+    public static int hints = 3;
+    public static int dif;
+    public static List<char> guessed = new();
+    public static List<char> wrong = new();
+    public static String secret;
+    public static Random rnd = new();
+    public static User curUser;
+    public static String[] easy = {
+    "Apple","Chair","Sword","Water","Magic","Raven","Storm","Blaze","Frost","Ocean",
+    "Flame","Shine","Stone","Light","Dream","Crown","Shade","Heart","Cloud","Angel",
+    "Fairy","Steel","Grain","River","Plant","Glass","Tiger","Eagle","Zebra","Horse",
+    "Peach","Lemon","Berry","Flute","Piano","Viola","Drums","Tower","Camel","Shark",
+    "Mouse","Table","Couch","Grave","Spice","Pearl","Queen","Kingy","Noble","Brave"
+};
+    public static String[] medium = {
+    "Adventure","Dangerous","Eternally","Forgotten","Nightfall","Spellbook","Moonlight","ArmoredUp","Darkblade","Strongest",
+    "Wanderers","Ironclads","Bloodfire","Stormborn","Lostworld","Highspire","Soulreach","Flamelord","Dreadwing","Hollowden",
+    "Mournfall","Starlight","Evergreen","Ashwalker","Icehunter","Shadowend","Dragonkin","Lightbear","Darkspire","Thunderer",
+    "Gravemind","Wintering","Silentium","Stonework","Firestorm","Mistbound","Wolfheart","Sunstruck","Deathsong","Skullborn",
+    "Nightbane","Ironforge","Blazewind","Frostbane","Oathkeeper","Kingsfall","Stormwind","Ravenhold","Mooncrest","Flameborn"
+};
+    public static String[] hard = {
+    "Into The Abyss","Shadow Of Fate","Dance With Fire","The Last Stand","Rise Of Legends",
+    "Path To Glory","Under The Moon","Call Of Destiny","Through The Mist","Whispering Shadows",
+    "Echoes Of Time","Heart Of Stone","Winds Of Winter","Clash Of Kings","Tears Of Flame",
+    "Crown Of Blood","Storms Of Chaos","March Of Doom","Edge Of Night","Dreams Of Gold",
+    "Fallen From Grace","Bound By Honor","Wings Of Desire","Song Of Silence","Sands Of Time",
+    "Blades Of Glory","Realm Of Magic","Touch Of Frost","Breath Of Life","Circle Of Fire",
+    "Secrets Of Power","Voice Of Thunder","Gift Of Night","Garden Of Eden","Fall Of Heroes",
+    "Rise Of Dawn","Chamber Of Secrets","Light Of Hope","Call Of Shadows","Cursed By Fate",
+    "Journey To Nowhere","Blood Of Kings","Legends Never Die","Maze Of Memories","Whisper Of Truth",
+    "Dance Of Blades","Road To Ruin","Bound To Darkness","Waves Of Eternity","Shadow And Flame"
+};
+    public static String[] stage = new string[]
+    {   @"
+        _______
+        |/    
+        |     
+        |      
+        |
+        |   
+     ___|___",
+        @"
+        _______
+        |/    |
+        |     
+        |      
+        |
+        |
+     ___|___",
+        @"
+        _______
+        |/    |
+        |     ()
+        |      
+        |
+        |
+     ___|___",
+        @"
+        _______
+        |/    |
+        |     ()
+        |     |
+        |
+        |
+     ___|___",
+        @"
+        _______
+        |/    |
+        |     ()
+        |    /|
+        |    
+        |
+     ___|___",
+        @"
+        _______
+        |/    |
+        |     ()
+        |    /|\
+        |
+        |
+     ___|___",
+        @"
+        _______
+        |/    |
+        |     ()
+        |    /|\
+        |    /
+        |
+     ___|___",
+        @"
+        _______
+        |/    |
+        |     ()
+        |    /|\
+        |    / \
+        |
+     ___|___"};
+    public static void Main() // Task: Make a hint limitation!
+    {                      // Problem:        
+        UserMenu();
+    }
+    public static void UserMenu()
+    {
+        while (true)
+        {              
+            Console.Clear(); LoadFile("hang.json"); Color("cyan");
+            if (curUser != null) { Console.WriteLine($"Welcome to Hang Man!\n" +
+                $"Easy: ({curUser.streaks.easy}) | Medium: ({curUser.streaks.medium}) | Hard: ({curUser.streaks.hard})"); }            
+            Console.WriteLine(curUser != null ? $"User: {curUser.name}" : "Login to play Hang Man!");
+            Console.WriteLine("(1) Login\n(2) Sign up\n(3) Play\n(4) Delete\n(5) Leaderboard\n(6) Logout");
+            int choice = Intput(); if (choice == -1 || choice > 6) continue;
+            if (choice > 2 && curUser == null) { Console.WriteLine("Login First"); Thread.Sleep(800); continue; }
+            switch (choice)
+            {
+                case 1: Console.Clear(); LogIn(); break;
+                case 2: Console.Clear(); SignUp(); break;
+                case 3: Console.Clear(); Intro(); break;
+                case 4: Console.Clear(); Delete(); break;
+                case 5: Console.Clear(); Leaderboard(); break;
+                case 6: curUser = null; SaveFile("hang.json"); break;
+            }
+        }
+    }
+    public static void LogIn()
+    {
+        while (true)
+        {
+            Console.Clear(); Color("darkblue");
+            foreach (var x in users) { Console.WriteLine($"{x.Key}. {x.Value.name} | " +
+                $"Easy: ({x.Value.streaks.easy}) | Medium: ({x.Value.streaks.medium}) | Hard: ({x.Value.streaks.hard})"); }
+            Console.WriteLine("Type 'exit'");
+            Console.Write("Username: ");
+            String uname = Console.ReadLine(); if (uname.ToLower() == "exit") break;
+            Console.Write("Password: ");
+            String upass = Console.ReadLine(); if (upass.ToLower() == "exit") break;
+            var match = users.Values.FirstOrDefault(k => k.name == uname);
+            if (match == null) { Console.WriteLine("Wrong Username"); Thread.Sleep(1350); Console.Clear(); continue; }
+            if (match.pass != Password(upass)) { Console.WriteLine("Wrong Password"); Thread.Sleep(1350); Console.Clear(); continue; }
+            curUser = match; SaveFile("hang.json"); break;
+        }
+    }
+    public static void SignUp()
+    {
+        while (true)
+        {
+            Color("blue");
+            Console.WriteLine("Type 'exit'");
+            Console.Write("Username: ");
+            String uname = Console.ReadLine(); if (uname.ToLower() == "exit") break;
+            Console.Write("Password: ");
+            String upass = Console.ReadLine(); if (upass.ToLower() == "exit") break;
+            users.Add(userKey++, new User { name = uname, pass = Password(upass) }); Arrange(); SaveFile("hang.json"); break;
+        }
+    }
+    public static void Delete()
+    {
+        while (true)
+        {
+            Color("magenta");
+            Console.Write("Are you sure you want to delete this user?\nType 'YES' to confirm: ");
+            String yes = Console.ReadLine();
+            if (yes != "YES") break;
+            users.Remove(GU(curUser)); curUser = null; Arrange(); SaveFile("hang.json"); break;
+        }
+    }
+    public static void Intro()
+    {
+        while (true)
+        {
+            Console.Clear(); Color("gray");
+            Console.WriteLine("Choose a difficulty: \n(1) Easy\n(2) Medium\n(3) Hard");
+            int choice = Intput(); if (choice > 3 || choice == -1) continue;
+            if (choice == 1) dif = 1; if (choice == 2) dif = 2; if (choice == 3) dif = 3;
+            Game(); break;
+        }
+    }
+    public static void Game()
+    {
+        switch (dif)
+        {
+            case 1: secret = easy[rnd.Next(easy.Length)]; Color("green"); break;
+            case 2: secret = medium[rnd.Next(medium.Length)]; Color("yellow"); break;
+            case 3: secret = hard[rnd.Next(hard.Length)]; Color("red"); break;
+        }
+        guessed.Add(' ');
+        while (true)
+        {
+            Console.Clear();
+            Console.WriteLine(stage[7 - lives]);
+            if (lives == 0) { Thread.Sleep(1350); Ender(); }
+            foreach (char x in wrong) { Console.Write($"|{x}|"); }
+            Console.Write($"\nLives: {lives}\nHints: {hints}\nTake a guess: ");
+            foreach (char x in secret) { Console.Write(guessed.Any(k => char.ToUpper(k) == char.ToUpper(x)) ? $"{x} " : "_ "); }
+            if (secret.All(k => guessed.Any(x => char.ToUpper(x) == char.ToUpper(k)))) { Thread.Sleep(500); Ender(); }
+            char guess = char.ToUpper(Input());          
+            if (hints != 0 && guess == '`' || guess == '~') guessed.Add(Hint2());
+            if (char.IsPunctuation(guess) || char.IsSymbol(guess)) continue;
+            if (guessed.Any(k => char.ToUpper(k) == char.ToUpper(guess))) continue;
+            if (secret.Any(k => char.ToUpper(k) == char.ToUpper(guess))) guessed.Add(guess);
+            else if (!wrong.Any(k => char.ToUpper(k) == char.ToUpper(guess))) { wrong.Add(guess); lives--; }
+        }
+    }   
+    public static char Hint()
+    {
+        while (true)
+        {
+            char x = secret[rnd.Next(0, secret.Length)];
+            if (!guessed.Any(k => char.ToUpper(k) == char.ToUpper(x))) return x;
+        }       
+    }
+    public static char Hint2()
+    {
+        var w = secret.Where(k => !guessed.Any(x => char.ToUpper(x) == char.ToUpper(k))).Distinct().ToList();
+        hints--; return w[rnd.Next(w.Count)];
+    }
+    public static void Ender()
+    {
+        bool win;
+        bool completed = true;
+        foreach (char x in secret.Where(k => k != ' '))
+            if (!guessed.Where(k => k != ' ').Any(k => char.ToUpper(k) == char.ToUpper(x)))
+                completed = false;
+        win = completed;       
+        if (win == true)
+        {
+            Console.Clear(); guessed.Clear(); wrong.Clear(); lives = 7; var s = curUser.streaks;
+            if (easy.Any(k => String.Equals(k, secret, StringComparison.OrdinalIgnoreCase)))
+            { Escore++; if (Escore > s.easy) curUser.streaks.easy = Escore; dif = 1; }
+            if (medium.Any(k => String.Equals(k, secret, StringComparison.OrdinalIgnoreCase)))
+            { Mscore++; if (Mscore > s.medium) curUser.streaks.medium = Mscore; dif = 2; }
+            if (hard.Any(k => String.Equals(k, secret, StringComparison.OrdinalIgnoreCase)))
+            { Hscore++; if (Hscore > s.hard) curUser.streaks.hard = Hscore; dif = 3; }
+            SaveFile("hang.json");
+            while (true)
+            {
+                Console.Clear();
+                switch (dif)
+                {
+                    case 1: Console.WriteLine($"Score: ({Escore}) | ({s.easy} :Streak)"); break;
+                    case 2: Console.WriteLine($"Score: ({Mscore}) | ({s.medium} :Streak)"); break;
+                    case 3: Console.WriteLine($"Score: ({Hscore}) | ({s.hard} :Streak)"); break;
+                }
+                Console.WriteLine($"The word is: {secret}\n(1) Continue\n(2) Difficulty\n(3) Menu\n(4) Exit");
+                int choice = Intput();
+                if (choice == -1 || choice > 4) continue;
+                if (choice == 1) { Game(); break; }
+                if (choice == 2) { Intro(); break; }
+                if (choice == 3) { UserMenu(); break; }
+                if (choice == 4) Environment.Exit(0); Console.Clear();
+            }
+        }
+        else if (lives == 0)
+        {
+            while (true)
+            {
+                Console.Clear(); guessed.Clear(); wrong.Clear(); Escore = 0; Mscore = 0; Hscore = 0; lives = 7; hints = 3;
+                Console.WriteLine($"The word is: {secret}\n(1) Try Again\n(2) Menu\n(3) Exit");
+                int choice = Intput();
+                if (choice == -1 || choice > 3) continue;
+                if (choice == 1) { Intro(); break; }
+                if (choice == 2) { UserMenu(); break; }
+                if (choice == 3) Environment.Exit(0); Console.Clear();
+            }
+        }
+    }
+    public static void Leaderboard()
+    {
+        while (true)
+        {
+            IEnumerable<KeyValuePair<int, User>> match = users;
+            Console.WriteLine("(1) Search\n(2) Top 5\n(3) Worst 5");
+            int choice = Intput(); if (choice == -1 || choice > 3) continue;
+            if (choice == 1)
+            {
+                Console.Write("Search username: ");
+                String uname = Console.ReadLine();
+                match = users.Where(k => k.Value.name.StartsWith(uname, StringComparison.OrdinalIgnoreCase));
+            }
+            if (choice == 2) match = users.OrderByDescending(k => k.Value.sum);
+            if (choice == 3) match = users.OrderBy(k => k.Value.sum); Console.Clear();
+            foreach (var x in match) { Console.WriteLine($"{x.Key}. {x.Value.name}: {x.Value.sum}"); }
+        }
+    }
+    public static int Intput()
+    {
+        char asd = Console.ReadKey(true).KeyChar;
+        return int.TryParse(asd.ToString(), out int sad) ? sad : -1;
+    }
+    public static char Input()
+    {
+        char asd = Console.ReadKey(true).KeyChar;
+        return !int.TryParse(asd.ToString(), out int sad) ? asd : '@';
+    }
+    public static void Arrange()
+    {
+        Dictionary<int, User> arr = new();
+        int arrKey = 1;
+        foreach (var x in users.OrderBy(k => k.Key)) { arr[arrKey++] = x.Value; } users = arr;
+    }
+    public static String Password(String pass)
+    {
+        using var sha = SHA256.Create();
+        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(pass));
+        return Convert.ToHexString(bytes);
+    }
+    public static void Color(String color) { if (!Enum.TryParse(color, true, out ConsoleColor res)) return; { Console.ForegroundColor = res; } }
+    public static int GU(User user) { return users.FirstOrDefault(k => k.Value.name == user.name).Key; }
+    public class User
+    {
+        public String name { get; set; }
+        public String pass { get; set; }
+        public Streaks streaks { get; set; } = new();
+        public int sum => streaks.easy + streaks.medium + streaks.hard;
+        public User() { }
+    }
+    public class Streaks
+    {
+        public int easy { get; set; } = 0;
+        public int medium { get; set; } = 0;
+        public int hard { get; set; } = 0;
+    }
+    public class Save
+    {
+        public Dictionary<int, User> Users { get; set; } = new();
+        public int CurID { get; set; }
+        public int UserKey { get; set; }
+    }
+    public static void SaveFile(String path)
+    {
+        int curid = curUser == null ? -1 : GU(curUser);
+        var save = new Save { Users = users, CurID = curid, UserKey = userKey };
+        var option = new JsonSerializerOptions { IncludeFields = true };
+        String json = JsonSerializer.Serialize(save, option);
+        File.WriteAllText(path, json);
+    }
+    public static void LoadFile(String path)
+    {
+        if (!File.Exists(path)) return;
+        String json = File.ReadAllText(path);
+        var res = JsonSerializer.Deserialize<Save>(json);
+        if (res != null)
+        {
+            users = res.Users;
+            userKey = res.UserKey;
+            if (res.CurID != -1) curUser = users[res.CurID];
+        }
+    }
+}

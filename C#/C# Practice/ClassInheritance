@@ -1,0 +1,41 @@
+using System;
+using System.Security.Cryptography.X509Certificates;
+using C__starter;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Chef chef1 = new Chef();
+        chef1.MakeSpecialDish();
+
+        ItalianChef chef2 = new ItalianChef();
+        chef2.MakeSpecialDish();
+    }
+    internal class Chef
+    {
+        public void MakeChicken()
+        {
+            Console.WriteLine("The Chef makes chicken");
+        }
+        public void MakeSalad()
+        {
+            Console.WriteLine("The chef makes salad");
+        }
+        public virtual void MakeSpecialDish()
+        {
+            Console.WriteLine("The chef makes bbq ribs");
+        }
+    }
+    internal class ItalianChef : Chef
+    {
+        public void MakePasta()
+        {
+            Console.WriteLine("I make the pasta!");
+        }
+        public override void MakeSpecialDish()
+        {
+            Console.WriteLine("I make the pizza!");
+        }
+    }
+}

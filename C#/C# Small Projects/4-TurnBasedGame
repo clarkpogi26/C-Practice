@@ -1,0 +1,197 @@
+Random rnd = new Random();
+int playerHealth = 100;
+int enemyHealth = 100;
+int playerAttack = rnd.Next(5, 20);
+int enemyAttack = rnd.Next(5, 20);
+int playerSpecial = rnd.Next(15, 35);
+int enemySpecial = rnd.Next(15, 35);
+int playerSpecialLimit = 2;
+int heal = rnd.Next(15, 30);
+int playerHealLimit = 3;
+int enemyHealLimit = 3;
+int enemySpecialLimit = 2;
+Console.Beep(440, 150); 
+Console.Beep(523, 150);  
+Console.Beep(659, 200); 
+Thread.Sleep(100);
+Console.Beep(880, 300);
+while (true)
+{
+    Console.Beep(600, 50);
+    Console.Beep(400, 50);
+    color("darkgreen");
+    Console.WriteLine($"Your Health: {playerHealth} | Enemy Health: {enemyHealth}");
+    color("darkblue");
+    Console.WriteLine("Whats your move?");
+    color("red");
+    Console.WriteLine("Attack  [A]");
+    color("magenta");
+    Console.WriteLine("Special [S]");
+    color("green");
+    Console.WriteLine("Heal    [H]");
+    color("blue");
+    Console.WriteLine("Run     [R]");
+    color("darkyellow");
+    Console.WriteLine($"Heals left: {playerHealLimit} | Specials left: {playerSpecialLimit}");
+    ConsoleKeyInfo move = Console.ReadKey(true);
+    char move1 = char.ToLower(move.KeyChar);
+
+    if (move1 == 'a')
+    {
+        Console.Beep(500, 50);
+        Console.Beep(300, 100);
+        enemyHealth -= playerAttack;
+        color("red");
+        Console.WriteLine($"You used attack!\nEnemy received {playerAttack} dmg!");
+    }
+    else if (move1 == 's')
+    {
+        if (playerSpecialLimit == 0)
+        {
+            color("magenta");
+            Console.WriteLine("You used up all your specials!");
+            Thread.Sleep(500);
+            Console.Clear();
+            continue;
+        }
+        color("magenta");
+            Console.Beep(900, 50);
+            Console.Beep(1200, 50);
+            Console.Beep(700, 100);
+            playerSpecialLimit--;
+            enemyHealth -= playerSpecial;
+            Console.WriteLine($"You used special!\nEnemy received {playerSpecial} dmg!");       
+    }
+    else if (move1 == 'h')
+    {
+        if (playerHealLimit <= 0)
+        {
+            color("green");
+            Console.WriteLine("You used up all your heals!");
+            Thread.Sleep(500);
+            Console.Clear();
+            continue;
+        }
+        color("green");
+        Console.Beep(400, 100);
+        Console.Beep(600, 100);
+        Console.Beep(800, 150);
+        playerHealLimit--;
+        playerHealth += heal;
+        Console.WriteLine($"You used heal!\nYou received {heal} health!");
+    }
+    else if (move1 == 'r')
+    {
+        color("blue");
+        Console.WriteLine("You ran away!");
+        Console.Beep(300, 200);
+        Console.Beep(200, 200);
+        Console.Beep(150, 300);
+        Thread.Sleep(1000);
+        break;
+    }
+    else
+        Console.WriteLine("Invalid Input");
+    Thread.Sleep(1000);
+    Console.Clear();
+    if (playerHealth <= 0)
+    {
+        color("darkred");
+        Console.WriteLine("You Lost!\nPlay again (y/n)");
+        ConsoleKeyInfo choys = Console.ReadKey();
+        char choy = choys.KeyChar;
+        if (choy == 'y')
+        {
+            playerHealth = 100;
+            enemyHealth = 100;                   
+            playerSpecialLimit = 2;
+            playerHealLimit = 3;
+            enemyHealLimit = 3;
+            enemySpecialLimit = 3;
+            continue;
+        }
+        else 
+        {
+            Console.WriteLine("Thanks for playing!");
+            break;
+        }
+    }
+    else if (enemyHealth <= 0)
+    {
+        color("green");
+        Console.WriteLine("You Won!\nPlay again (y/n)");
+        Console.Beep(523, 200);
+        Console.Beep(659, 200);
+        Console.Beep(783, 200);
+        Console.Beep(1046, 400);
+        Thread.Sleep(100);
+        Console.Beep(880, 300);
+        Console.Beep(987, 300);
+        Console.Beep(1175, 500);
+        Thread.Sleep(100);
+        Console.Beep(1318, 700);
+        ConsoleKeyInfo choys = Console.ReadKey();
+        char choy = choys.KeyChar;
+        if (choy == 'y')
+        {
+            playerHealth = 100;
+            enemyHealth = 100;
+            playerSpecialLimit = 2;
+            playerHealLimit = 3;
+            enemyHealLimit = 3;
+            enemySpecialLimit = 3;
+            continue;
+        }
+        else
+        {
+            Console.WriteLine("Thanks for playing");
+            break;
+        }
+
+    }
+        (playerHealth, enemyHealth, enemySpecialLimit, enemyHealLimit) = enemy(playerHealth, enemyHealth, enemySpecialLimit, enemyHealLimit);
+}
+static (int, int, int, int) enemy(int playerHealth, int enemyHealth, int enemySpecialLimit, int enemyHealLimit)
+{
+    Random rnd = new Random();
+    int enemyAttack = rnd.Next(5, 20);
+    int enemySpecial = rnd.Next(15, 35);
+    int heal = rnd.Next(15, 30);
+    int enemyChoice = rnd.Next(1, 4);
+    if (enemyChoice == 1)
+    {
+        playerHealth -= enemyAttack;
+        color("red");
+        Console.WriteLine($"Enemy used attack!\nYou received {enemyAttack} dmg!");
+    }
+    else if (enemyChoice == 2 && enemySpecialLimit > 0)
+    {
+        color("magenta");
+        enemySpecialLimit--;
+        playerHealth -= enemySpecial;
+        Console.WriteLine($"Enemy used special!\nYou received {enemySpecial} dmg!");
+    }
+    else if (enemyChoice == 3 && enemyHealLimit > 0)
+    {
+        color("green");
+        enemyHealLimit--;
+        enemyHealth += heal;
+        Console.WriteLine($"Enemy used heal!\nEnemy received {heal} health!");
+    }
+    else
+    {
+        color("red");
+        playerHealth -= enemyAttack;
+        Console.WriteLine($"Enemy used attack!\nYou received {enemyAttack} dmg!");
+    }
+    Thread.Sleep(1000);
+    Console.Clear();
+        return (playerHealth, enemyHealth, enemySpecialLimit, enemyHealLimit);
+}
+static void color(string colorName)
+{
+    if (Enum.TryParse(colorName, true, out ConsoleColor result))
+    {
+        Console.ForegroundColor = result;
+    }
+}

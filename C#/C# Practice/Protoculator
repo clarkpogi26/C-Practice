@@ -1,0 +1,78 @@
+using System;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        bool valid = false;
+        while (!valid)
+        {
+            Console.Write("Enter a number: ");
+            string input1 = (Console.ReadLine());
+            if (string.IsNullOrWhiteSpace(input1))
+            {
+                Console.WriteLine("invalid");
+                continue;
+            }
+            bool num1validity = double.TryParse(input1, out double num1);
+            if (!num1validity)
+            {
+                Console.WriteLine("invalid");
+                continue;
+            }
+
+            Console.Write("enter operator: ");
+            string op = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(op))
+            {
+                Console.WriteLine("invalid");
+                continue;
+            }
+
+            Console.Write("Enter a number: ");
+            string input2 = (Console.ReadLine());
+            if (string.IsNullOrWhiteSpace(input2))
+            {
+                Console.WriteLine("invalid");
+                continue;
+            }
+            bool num2validity = double.TryParse(input2, out double num2);
+            if (!num2validity)
+            {
+                Console.WriteLine("invalid");
+                continue;
+            }
+
+            if (op == "+")
+            {
+                Console.WriteLine(num1 + num2);
+                valid = true;
+            }
+            else if (op == "-")
+            {
+                Console.WriteLine(num1 - num2);
+                valid = true;
+            }
+            else if (op == "/")
+            {
+                Console.WriteLine(num1 / num2);
+                valid = true;
+            }
+            else if (op == "%")
+            {
+                Console.WriteLine(num1 % num2);
+                valid = true;
+            }
+            else if (op == "*")
+            {
+                Console.WriteLine(num1 * num2);
+                valid = true;
+            }
+            else
+            {
+                Console.WriteLine("Invalid");
+            }
+        }
+    }
+    
+}

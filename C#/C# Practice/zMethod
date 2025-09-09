@@ -1,0 +1,83 @@
+using System;
+class Program
+{
+    static void Main(string[] args)
+    {
+        string name = "bro";
+        int age = 21;
+        singHappyBirthday(name, age);
+        static void singHappyBirthday(string wow, int owo)
+        {
+            Console.WriteLine($"Happy Birthday To {wow}");
+            Console.WriteLine($"Happy Birthday To {wow}");
+            Console.WriteLine("Happy Birthday, Happy Birthday");
+            Console.WriteLine($"Happy Birthday To {wow}");
+            Console.WriteLine($"Happy {owo} years old!");
+        }
+        meetAlien();
+    }
+    static void meetAlien()
+    {
+        Random random = new Random();
+        string name = "X-" + random.Next(10, 999);
+        int age = random.Next(10, 500);
+
+        Console.WriteLine($"Hello, my name is {name}");
+        Console.WriteLine($"I'm {age} years old");
+    }
+}
+// static int
+static void Main(string[] args)
+{
+    int result = square(4);
+    Console.WriteLine(result); // 16
+}
+static int square(int number)
+{
+    int result = number * number;
+    return result;
+}
+// static void
+static void Main(string[] args)
+{
+    multiply(10, 10);
+}
+static void multiply(int num1,int num2)
+{
+    int result = num1 * num2;
+    Console.WriteLine(result);
+}
+// Overload
+static void Main(string[] args)
+{
+    Console.WriteLine(add(5.5f,2.2f,5));
+    Console.WriteLine(add(5,5,5));
+    Console.WriteLine(add(5,5));
+}
+static int add(int num1,int num2)
+{
+    return num1 + num2;
+}
+static int add(int num1, int num2, int num3)
+{
+    return num1 + num2 + num3;
+}
+static float add(float num1, float num2, int num3)
+{
+    return num1 + num2 + num3;
+}
+// static int array
+static void Main(string[] args)
+{
+    int[] numbers = { 5, 3, 8, 2 };
+    Console.WriteLine(add(numbers)); // 18
+}
+static int add(int[] numbers)
+{
+    int sum = 0;
+    for(int i = 0; i < numbers.Length; i++)
+    {
+        sum += numbers[i];
+    }
+    return sum;
+}

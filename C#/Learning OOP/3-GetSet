@@ -1,0 +1,48 @@
+using System;
+using System.Security.Cryptography.X509Certificates;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Movie movie1 = new Movie("The Avengers", "Joss Whedon", "PG-13");
+        Movie movie2 = new Movie("Shrek", "Adam Adamson", "PG");
+
+        Console.WriteLine(movie1.Rating);
+
+        string changeRating = Console.ReadLine();
+        movie1.Rating = changeRating;
+        Console.WriteLine(movie1.Rating);
+        Thread.Sleep(1000);
+    }
+    internal class Movie
+    {
+        public string title;
+        public string director;
+        private string rating;
+
+        public Movie(string aTitle, string aDirector, string aRating)
+        {
+            title = aTitle;
+            director = aDirector;
+            Rating = aRating;
+        }
+
+        public string Rating
+        {
+            get { return rating; }
+            set
+            {
+                string upperValue = value.ToUpper();
+                if (upperValue == "G" || upperValue == "PG" || upperValue == "PG-13" || upperValue == "R")
+                {
+                    rating = upperValue;
+                }// use the original privated variable (rating)
+                else
+                {
+                    rating = "NR";
+                }
+            }
+        }
+    }
+}

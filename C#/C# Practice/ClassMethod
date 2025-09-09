@@ -1,0 +1,35 @@
+using System;
+using System.Security.Cryptography.X509Certificates;
+using C__starter;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Student student1 = new Student("Johnny", "Business", 2.8);
+        Student student2 = new Student("Ashley", "Psychology", 3.6);
+
+        Console.WriteLine(student1.hasHonors());
+        Console.WriteLine(student2.hasHonors());
+
+        public string name;
+        public string major;
+        public double gpa;
+
+        public Student(string aName, string aMajor, double aGpa)
+        {
+            name = aName;
+            major = aMajor;
+            gpa = aGpa;
+        }
+
+        public bool hasHonors()
+        {
+            if (gpa >= 3.5)
+            {
+                return true;
+            }
+            return false;
+        }
+}
+}

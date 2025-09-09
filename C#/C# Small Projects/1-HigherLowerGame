@@ -1,0 +1,122 @@
+using System;
+using System.Security.Cryptography.X509Certificates;
+using System.Diagnostics;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Stopwatch timing = new Stopwatch();
+        Random random = new Random();
+        int secretNumber = random.Next(1, 101);
+        int guessLimit = ChooseDifficulty();
+        int winStreak = 0;
+        bool isMore;
+        List<int> track = new List<int>();
+        while (true)
+        {
+            Console.Write("(1-100) Guess the number: ");
+            string input = Console.ReadLine();
+            if (!int.TryParse(input, out int output))
+            {
+                Console.WriteLine("Only Numbers");
+                continue;
+            }
+            if (output < 1 || output > 100)
+            {
+                Console.WriteLine($"Only 1-100");
+            }
+            track.Add(output);
+            timing.Start();
+            if (output > secretNumber)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Lower");
+                Console.Beep(1000, 500);
+            }
+            else if (output < secretNumber)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Higher");
+                Console.Beep(500, 500);
+            }
+            guessLimit--;
+            Console.WriteLine($"Guesses Left: {guessLimit}");
+            if (output == secretNumber)
+            {
+                winStreak++;
+                Console.Beep(1000, 150);
+                Console.Beep(1200, 150);
+                Console.Beep(1400, 150);
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine($"Your Time: {timing.Elapsed.Seconds}s");
+                timing.Reset();
+                Console.WriteLine("Your Guesses: " + string.Join(", ", track));
+                Console.WriteLine($"You guessed it! ({secretNumber})");
+                Console.WriteLine($"Your Streak: {winStreak}");
+                Console.Write("Play again? (y/n)");
+                string replay = Console.ReadLine().ToLower().Trim();
+                if (replay == "y")
+                {
+                    guessLimit = ChooseDifficulty();
+                    secretNumber = random.Next(1, 100);
+                    track.Clear();
+                    Console.Clear();
+                    continue;
+                }
+                break;
+            }
+            else if (guessLimit == 0)
+            {
+                Console.Beep(300, 200);
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                Console.WriteLine($"Your Time: {timing.Elapsed.Seconds}s");
+                timing.Reset();
+                Console.WriteLine("Your Guesses: " + string.Join(", ", track));
+                Console.WriteLine("You ran out of guesses (" + secretNumber + ") is the number");
+                Console.WriteLine($"Your Streak: {winStreak}");
+                Console.Write("Play again? (y/n)");
+                string replays = Console.ReadLine().ToLower().Trim();
+                if (replays == "y")
+                {
+                    guessLimit = ChooseDifficulty();
+                    secretNumber = random.Next(1, 100);
+                    track.Clear();
+                    winStreak = 0;
+                    Console.Clear();
+                    continue;
+                }
+                break;
+            }
+            if (guessLimit == 1)
+            {
+                if (secretNumber % 2 == 0)
+                {
+                    Console.WriteLine("Hint: Even Number");
+                }
+                else
+                {
+                    Console.WriteLine("Hint: Odd Number");
+                }
+            }
+        }
+    }
+    static int ChooseDifficulty()
+    {
+        while (true)
+        {
+            Console.Write("Choose a difficulty (easy/medium/hard): ");
+            string levelInput = Console.ReadLine().ToLower().Trim();
+
+            switch (levelInput)
+            {
+                case "easy": return 10;
+                case "medium": return 8;
+                case "hard": return 5;
+                default:
+                    Console.WriteLine("Invalid input. Type: easy, medium, or hard.");
+                    break;
+            }
+        }
+    }
+}

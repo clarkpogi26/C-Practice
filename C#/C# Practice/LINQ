@@ -1,0 +1,76 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var games = new List<Game>
+        {
+            new Game { Title = "The Legend of Zelda", Genre = "Adventure", ReleaseYear = 1986, Rating = 9.5, Price = 60 },
+            new Game { Title = "Super Mario Bros", Genre = "Platformer", ReleaseYear = 1985, Rating = 9.2, Price = 50 },
+            new Game { Title = "Elden Ring", Genre = "RPG", ReleaseYear = 2022, Rating = 9.8, Price = 70 },
+            new Game { Title = "Stardew Valley", Genre = "Simulation", ReleaseYear = 2016, Rating = 9.0, Price = 15 },
+            new Game { Title = "Tetris", Genre = "Puzzle", ReleaseYear = 1984, Rating = 8.9, Price = 10 }
+        };
+
+        var genres = games.Select(game => game.Genre).Distinct(); // removes the duplicates
+        foreach (var genre in genres)
+            Console.WriteLine(genre);
+
+        var cheapestGames = games.OrderBy(game => game.Price).First(); // OrderBy but with .First() that matches a condition
+
+        var adventureGames = games.Where(game => game.Genre == "Adventure");
+        var adventureGamesQuery = from game in games
+                                  where game.Genre == "Adventure"
+                                  select game;           
+        foreach (var game in adventureGames) Console.WriteLine(game.Title);
+
+        var skipped = games.SkipWhile(game => game.Rating > 9.1); // returns as long as
+        foreach (var game in skipped) Console.WriteLine($"{game.Title} | {game.Rating}");
+
+        var budgetAdventureGames = games
+            .Where(game => game.Genre == "Adventure" && game.Price <= 60)
+            .OrderBy(game => game.Rating)
+            .Select(game => $"{game.Title} | {game.Price}");
+        foreach (var game in budgetAdventureGames) Console.WriteLine(game);
+
+        var groupedGames = games.GroupBy(game => game.Genre); 
+        foreach (var group in groupedGames)
+        {
+            Console.WriteLine($"Genre: {group.Key}");
+            foreach (var game in group)
+            {
+                Console.WriteLine($"Title: {game.Title}");
+            }
+        }
+
+        var paginatedGames = games.Skip(2).Take(2); // Skips and Takes
+
+        var bestGame = games.First(game => game.Rating == highestRated); // returns the game that is first seen with the condition
+
+        var highestRated = games.Max(game => game.Rating);
+        var averagePrice = games.Average(game => game.Price); // returns avg/min/max
+        var minPrice = games.Min(game => game.Price);
+
+        var sorted = games.OrderBy(game => game.ReleaseYear); // orders thembased on number (it can be OrderByDescending)
+
+        var existingGame = games.Any(game => game.ReleaseYear > 2000); // returns a true or false
+
+        Console.WriteLine($"are there any modern games? {existingGame}"); // true
+
+        /ar rpgGames = games.Where(game => game.Genre == "RPG"); // returns only those that have "RPG"
+
+        var title = games.Select(game => game.Title); // Only gets the Data of dot (Title)        
+    }
+    public class Game
+    {
+        public string Title { get; set; }
+        public string Genre { get; set; }
+        public int ReleaseYear { get; set; }
+        public double Rating { get; set; }
+        public int Price { get; set; }
+    }
+}

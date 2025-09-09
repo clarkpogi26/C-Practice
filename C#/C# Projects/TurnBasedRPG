@@ -1,0 +1,671 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Diagnostics.Metrics;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.Intrinsics.X86;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using static Program;
+
+class Program
+{
+    static bool turn = true;
+    static int reach = 100;
+    static int maxhealth = 0;
+    static int maxmana = 0;
+    static int maxenergy = 0;
+    static bool won = true;
+    static Random rnd = new();
+    static bool back = false;
+    static bool ran = false;
+    static Player p = new();
+    static Slime slime = new();
+    static Skeleton skeleton = new();
+    static Enemy e = RandomEnemy();
+    static void Main(string[] args)
+    {
+        Color("darkblue", 'x');
+        Console.WriteLine("Welcome to RPG Simulator\nPRESS ANY KEY TO PLAY"); // Problem: 
+        Console.ReadKey(true);
+        Stats();
+        Console.Write($"A wild {e.name} appeared");
+        Thread.Sleep(500);
+        Clear();
+        while (true)
+        {
+            Limit();
+            Effect('p');
+            ran = false;
+            if (turn)
+            {
+                while (true)
+                {
+                    won = true; // makes the won to be true after running away
+                    Color("DarkCyan", 'x');
+                    Console.WriteLine($"You: [HEALTH: {p.health}] [ENERGY: {p.energy}] [MANA: {p.mana}]\nChoose a move:");
+                    Color("red", 'x'); Console.WriteLine("Attack  [1]"); Color("magenta", 'x'); Console.WriteLine("Special [2]");
+                    Color("green", 'x'); Console.WriteLine("Bag     [3]"); Color("yellow", 'x'); Console.WriteLine("Run     [4]"); Color("gray", 'x'); Console.WriteLine("Stats   [5]");
+                    Color("darkgray", 'x'); Console.WriteLine($"{e.name}: [HEALTH: {e.health}] [{e.power}: {e.source}]");
+                    ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+                    char choic = keyInfo.KeyChar; // convert to string first               
+                    if (!char.IsDigit(choic) || !int.TryParse(choic.ToString(), out int choice) || choice > 5)
+                    {
+                        Console.WriteLine("Invalid Input");
+                        Clear();
+                        continue;
+                    }
+                    else if (choice == 1) Attack();
+                    else if (choice == 2) Special();
+                    else if (choice == 3) Bag();
+                    else if (choice == 4) Run();
+                    else if (choice == 5) Stats();
+                    if (back == false || p.Stun > 0) break;
+                }
+            }
+            Effect('q');
+            turn = ran;
+            if (!turn)
+            {
+                eEffect();
+                Bot();
+                turn = true;
+            }
+            if (p.health <= 0 || e.health <= 0 || won == false)
+            {
+                End(won);
+                e = NewEnemy();
+                Level();
+            }
+        }
+    }
+    public static Enemy RandomEnemy()
+    {
+        Dictionary<int, Enemy> en = new() { { 1, slime }, { 2, skeleton } };
+        int monster = rnd.Next(1, 3);
+        Enemy e = en[monster];
+        return e;
+    }
+    public static void Stats()
+    {
+        while (true)
+        {
+            Color("gray", 'x');
+            Console.WriteLine($"Level {p.level}| Exp: ({p.xp}/{reach}) => {p.level + 1}\nYou have {p.points} points\n(1) Health: {p.maxhealth}\n(2) Mana: {p.maxmana}\n(3) Energy: {p.maxenergy}\n(4) Strength: {p.strength}\n(5) Magic: {p.magic}\n(6) Defense: {p.defense}\n(0) Exit");
+            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+            char poin = keyInfo.KeyChar;
+            if (!char.IsDigit(poin) || !int.TryParse(poin.ToString(), out int point) || point > 6) { Console.WriteLine("Invalid"); Clear(); continue; }
+            else if (point == 0)
+            {
+                back = true;
+                Console.Clear();
+                break;
+            }
+            else if (p.points <= 0)
+            {
+                Console.WriteLine("Not enough points");
+                Clear();
+                continue;
+            }
+            switch (point)
+            {
+                case 1: p.maxhealth++; p.health += 10; break;
+                case 2: p.maxmana++; p.mana += 10; break;
+                case 3: p.maxenergy++; p.energy += 10; break;
+                case 4: p.strength++; break;
+                case 5: p.magic++; break;
+                case 6: p.defense++; break;
+            }
+            p.points--;
+            Console.Clear();
+            continue;
+        }
+    }
+    public static void Bag()
+    {
+        while (true)
+        {
+            Color("green", 'x');
+            p.inventory.ShowItem();
+            Console.WriteLine("Choose: (Press 0 to go back)");
+            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+            char x = keyInfo.KeyChar;
+            if (!int.TryParse(x.ToString(), out int key))
+            {
+                Console.WriteLine("Item Not Found");
+                continue;
+            }
+            if (key == 0)
+            {
+                back = true;
+                Console.Clear();
+                break;
+            }
+            Item Selected = p.inventory.GetItemByKey(key);// we use Item as a value type because it returns the inv[0] data
+            if (Selected == null) // ex: Item (new Item("potion", "heals 20hp", 1) - Selected
+            {
+                Console.WriteLine("No Item with that number.");
+                Clear();
+                continue;
+            }
+            string sName = Selected.Name;
+            switch (sName)
+            {
+                case "Health Flask": p.health += 13; Console.WriteLine("You gained 13 health"); break;
+                case "Mana Flask": p.mana += 13; Console.WriteLine("You gained 13 mana"); break;
+                case "Berries": p.energy += 13; Console.WriteLine("You gained 13 energy"); break;
+                case "Health Potion": p.health += 28; Console.WriteLine("You gained 28 health"); break;
+                case "Mana Potion": p.mana += 28; Console.WriteLine("You gained 28 mana"); break;
+                case "Apple": p.energy += 28; Console.WriteLine("You gained 28 energy"); break;
+                case "Elixir of Life": p.maxhealth++; p.health += 10; Console.WriteLine("You gained 10 health & 1 health point"); break;
+                case "Elixir of Mana": p.maxmana++; p.mana += 10; Console.WriteLine("You gained 10 mana & 1 mana point"); break;
+                case "Elixir of Stamina": p.maxenergy++; p.energy += 10; Console.WriteLine("You gained 10 energy & 1 energy point"); break;
+                case "Elixir of Strength": p.strength++; Console.WriteLine("You gained 1 strength"); break;
+                case "Elixir of Magic": p.magic++; Console.WriteLine("You gained 1 magic"); break;
+                case "Elixir of Endurance": p.defense++; Console.WriteLine("You gained 1 defense point"); break;
+                case "Elixir of Rejuvenation": p.health = p.maxhealth; p.mana = p.maxmana; p.energy = p.maxenergy; Console.WriteLine("You rejuvenated"); break;
+            }
+            p.inventory.RemoveItem(Selected); // remove the entire Data after
+            Thread.Sleep(1000);
+            Clear();
+            break;
+        }
+    }
+    public class Item
+    {
+        public String Name { get; }
+        public String Desc { get; }
+        public int Quantity { get; set; }
+        public Item(string name, string desc, int quantity = 1)// = 1 is a default value, if no value is provided
+        {
+            Name = name;
+            Desc = desc;
+            Quantity = quantity;
+        }
+    }
+    public class Inventory
+    {
+        private Dictionary<int, Item> inv = new();
+        private int key = 1;
+        public String dropped;
+        public void AddItem(Item item)
+        {
+            Item existing = inv.Values.FirstOrDefault(i => i.Name == item.Name);
+            if (existing != null) // var existing inv.FirstOrDefault(i => i.Value.Name == item.Name); <-- alternative (returns KVP)
+                existing.Quantity += item.Quantity;
+            else
+                inv[key++] = item;
+            Arrange();
+            dropped = item.Name;
+        }
+        public void ShowItem()
+        {// use count for dictionary
+            if (inv.Count == 0)
+            {
+                Console.WriteLine("Empty");
+                return; // return exits the method, and just shows us the "Empty" otherwise itll show an empty inventory
+            }
+            Console.WriteLine("Inventory:");
+            foreach (var i in inv) // for each index inside inv dictionary
+            {
+                Console.WriteLine($"{i.Key} {i.Value.Name} | {i.Value.Quantity}x | {i.Value.Desc}");
+            }
+        }// use Item class to target Item's key
+        public Item GetItemByKey(int key)
+        {
+            return inv.ContainsKey(key) ? inv[key] : null;
+        }
+        public void RemoveItem(Item item)
+        {// use var because it returns a KeyValuePair
+            var kvp = inv.FirstOrDefault(i => i.Value.Name == item.Name); // if u use just inv. it uses the entire KeyValuePair
+            if (kvp.Value == null) return;
+            item.Quantity--;
+            if (item.Quantity <= 0)
+                inv.Remove(kvp.Key); // the var kvp result is the matched item.Name.
+            Arrange();
+        }
+        public void Arrange()
+        {
+            var newInv = new Dictionary<int, Item>();
+            int newKey = 1;
+            newInv.Clear();
+            newKey = 1;
+            foreach (var m in inv.OrderBy(k => k.Key))
+            {
+                newInv[newKey++] = m.Value;
+            }
+            inv = newInv;
+            back = false;
+            if (inv.Count <= 0) key = 1;
+        }
+    }
+    public static void Attack()
+    {
+        while (true)
+        {
+            Color("red", 'x');
+            Console.WriteLine(" Swifty Strike 1)  Quick Step 2)  Blunt Force 3)  Patient Counter 4) (5 BACK");
+            ConsoleKeyInfo keyInfo1 = Console.ReadKey(true);
+            char choic1 = keyInfo1.KeyChar;
+            if (!char.IsDigit(choic1) || !int.TryParse(choic1.ToString(), out int choice1) || choice1 > 5)
+            {
+                Console.WriteLine("Invalid Input");
+                Clear();
+                continue;
+            }
+            if (choice1 == 5)
+            {
+                back = true;
+                Console.Clear();
+                break;
+            }
+            int energyStorage = p.energy;
+            Valid(choice1);
+            if (p.energy < 0)
+            {
+                p.energy = energyStorage;
+                Console.WriteLine($"Insufficient Energy: {p.energy}");
+                continue;
+            }
+            while (true)
+            {
+                if (choice1 == 1) A1();
+                if (choice1 == 2) A2();
+                if (choice1 == 3) A3();
+                if (choice1 == 4) A4();
+                break;
+            }
+            back = false;
+            break;
+        }
+    }
+    public static void Special()
+    {
+        while (true)
+        {
+            Color("magenta", 'x');
+            Console.WriteLine(" Swifty Strike 1)  Quick Step 2)  Blunt Force 3)  Patient Counter 4) (5 Back");
+            ConsoleKeyInfo keyInfo2 = Console.ReadKey(true);
+            char choic2 = keyInfo2.KeyChar;
+            if (!char.IsDigit(choic2) || !int.TryParse(choic2.ToString(), out int choice2) || choice2 > 5)
+            {
+                Console.WriteLine("Invalid Input");
+                Clear();
+                continue;
+            }
+            if (choice2 == 5)
+            {
+                back = true;
+                Console.Clear();
+                break;
+            }
+            int manaStorage = p.mana;
+            Valids(choice2);
+            if (p.mana < 0)
+            {
+                p.mana = manaStorage;
+                Console.WriteLine($"Insufficient Mana: {p.mana}");
+                continue;
+            }
+            while (true)
+            {
+                if (choice2 == 1) S1();
+                if (choice2 == 2) S2();
+                if (choice2 == 3) S3();
+                if (choice2 == 4) S4();
+                break;
+            }
+            back = false;
+            break;
+        }
+    }
+    public static bool Run()
+    {
+        Color("yellow", 'x');
+        if (RandomNumberGenerator.GetInt32(1, 101) > 19)
+        {
+            Console.WriteLine($"You failed to run away from {e.name}");
+            back = false;
+            Clear();
+            return false;
+        }
+        else
+        {
+            Console.WriteLine($"You managed to escape from {e.name}");
+            Thread.Sleep(1000);
+            Clear();
+            won = false;
+            back = false;
+            ran = true;
+            End(false);
+            return true;
+        }
+    }
+    public static void End(bool won)
+    {
+        if (won == true)
+        {
+            Console.WriteLine(p.health <= 0 ? "You Lost" : "You Won");
+            int choice = RandomNumberGenerator.GetInt32(1, 101);
+            switch (choice)
+            {
+                case int i when i <= 5: p.inventory.AddItem(new Item("Health Flask", "Recover 13 health", 1)); break;
+                case int i when i <= 10: p.inventory.AddItem(new Item("Mana Flask", "Recover 13 mana", 1)); break;
+                case int i when i <= 15: p.inventory.AddItem(new Item("Berries", "Recover 13 energy", 1)); break;
+                case int i when i <= 18: p.inventory.AddItem(new Item("Health Potion", "Recover 28 health", 1)); break;
+                case int i when i <= 21: p.inventory.AddItem(new Item("Mana Potion", "Recover 28 mana", 1)); break;
+                case int i when i <= 24: p.inventory.AddItem(new Item("Apple", "Recover 28 energy", 1)); break;
+                case int i when i <= 25: p.inventory.AddItem(new Item("Elixir of Life", "Gain 1 health point", 1)); break;
+                case int i when i <= 26: p.inventory.AddItem(new Item("Elixir of Mana", "Gain 1 mana point", 1)); break;
+                case int i when i <= 27: p.inventory.AddItem(new Item("Elixir of Stamina", "Gain 1 energy point")); break;
+                case int i when i <= 28: p.inventory.AddItem(new Item("Elixir of Strength", "Gain 1 strength point", 1)); break;
+                case int i when i <= 29: p.inventory.AddItem(new Item("Elixir of Magic", "Gain 1 magic point", 1)); break;
+                case int i when i <= 30: p.inventory.AddItem(new Item("Elixir of Endurance", "Gain 1 defense point", 1)); break;
+                case int i when i <= 31: p.inventory.AddItem(new Item("Elixir of Rejuvenation", "Recover everything", 1)); break;
+            }
+            if (choice <= 31) Console.WriteLine($"{e.name} dropped {p.inventory.dropped}");
+            Thread.Sleep(500);
+            Clear();
+        }
+    }
+    public static Enemy NewEnemy()
+    {
+        string[] enemies = { "Slime", "Skeleton" };
+        int chose = rnd.Next(enemies.Length);
+        string chosen = enemies[chose];
+        e = Factory.Create(chosen);
+        Clear();
+        Console.WriteLine($"You encountered a {e.name}");
+        Thread.Sleep(800);
+        Clear();
+        return e;
+    }
+    public static void Valids(int n)
+    {
+        switch (n)
+        {
+            case 1: p.mana -= 1; break;
+            case 2: p.mana -= 1; break;
+            case 3: p.mana -= 1; break;
+            case 4: p.mana -= 1; break;
+        }
+    }
+    public static void Valid(int n)
+    {
+        switch (n)
+        {
+            case 1: p.energy -= 1; break;
+            case 2: p.energy -= 1; break;
+            case 3: p.energy -= 1; break;
+            case 4: p.energy -= 1; break;
+        }
+    }
+    public static void eValid(int n)
+    {
+        switch (n)
+        {
+            case 1: e.source -= e.mb1; break;
+            case 2: e.source -= e.mb2; break;
+            case 3: e.source -= e.mb3; break;
+            case 4: e.source -= e.mb4; break;
+        }
+    }
+    public static void A1()
+    {
+        int dmg = 500 + p.strength;
+        eDMG(dmg);
+        Console.WriteLine($"You attacked {e.name}");
+        Clear();
+    }
+    public static void A2()
+    {
+        int dmg = 500 + p.strength;
+        eDMG(dmg);
+        Console.WriteLine($"You attacked {e.name}");
+        Clear();
+    }
+    public static void A3()
+    {
+        int dmg = 500 + p.strength;
+        eDMG(dmg);
+        Console.WriteLine($"You attacked {e.name}");
+        Clear();
+    }
+    public static void A4()
+    {
+        int dmg = 500 + p.strength;
+        eDMG(dmg);
+        Console.WriteLine($"You attacked {e.name}");
+        Clear();
+    }
+    public static void S1()
+    {
+        int dmg = 5 + p.magic;
+        eDMG(dmg);
+        Console.WriteLine($"You attacked {e.name}");
+        Clear();
+    }
+    public static void S2()
+    {
+        int dmg = 50 + p.magic;
+        eDMG(dmg);
+        Console.WriteLine($"You attacked {e.name}");
+        Clear();
+    }
+    public static void S3()
+    {
+        int dmg = 5 + p.magic;
+        eDMG(dmg);
+        Console.WriteLine($"You attacked {e.name}");
+        Clear();
+    }
+    public static void S4()
+    {
+        int dmg = 5 + p.magic;
+        eDMG(dmg);
+        Console.WriteLine($"You attacked {e.name}");
+        Clear();
+    }
+    public static void Limit()
+    {
+        maxhealth = p.ohealth + (p.maxhealth * 10);
+        if (p.health > maxhealth) p.health = maxhealth;
+        maxmana = p.omana + (p.maxmana * 10);
+        if (p.mana > maxmana) p.mana = maxmana;
+        maxenergy = p.oenergy + (p.maxenergy * 10);
+        if (p.energy > maxenergy) p.energy = maxenergy;
+    }
+    public static void Level()
+    {
+        if (won == true)
+        {
+            int bonus = 0;
+            if (e.difficulty == "meidum") { bonus = rnd.Next(1, 11); Console.WriteLine($"{e.difficulty} bonus XP: {bonus}"); }
+            if (e.difficulty == "hard") { bonus = rnd.Next(10, 21); Console.WriteLine($"{e.difficulty} bonus XP: {bonus}"); }
+            int gained = RandomNumberGenerator.GetInt32(10, 21) + bonus;
+            p.xp += gained;
+            Console.WriteLine($"You gained {gained} xp");
+            if (p.xp >= reach)
+            {
+                reach += 150;
+                p.points += 3;
+                p.level++;
+                Console.WriteLine($"You leveled up: {p.level}\n+3 stat points ({p.points})");
+            }
+        }
+    }
+    public static void Clear() { Thread.Sleep(500); Console.Clear(); }
+    public static void Color(String colo, char x)
+    {// if colo is enum (which isnt), make it true eitherway, turns it into Enum
+        if (Enum.TryParse(colo, true, out ConsoleColor color) && x == x) // ConsoleColor is the variable type
+            Console.ForegroundColor = color;
+        else
+            Console.BackgroundColor = color;
+    }
+    public class Player
+    {
+        public Player()
+        {
+            _ohealth = health;
+            _omana = mana;
+            _oenergy = energy;
+        }
+        public Inventory inventory = new(); // call inventory (Composition)
+        private int _ohealth;
+        private int _omana;
+        private int _oenergy;
+        private int _level = 1;
+        private int _xp = 0;
+        private int _points = 10;
+        private int _health = 1000;
+        private int _maxhealth = 0;
+        private int _mana = 100;
+        private int _maxmana = 0;
+        private int _energy = 100;
+        private int _maxenergy = 0;
+        private int _defense = 0;
+        private int _strength = 0;
+        private int _magic = 0;
+        private int _critChance = 0;
+        private int _Cooldown = 0;
+        private int _Stun = 0;
+        private int _Poison = 0;
+        private int _Burn = 0;
+        public int ohealth { get => _ohealth; set => _ohealth = value; }
+        public int omana { get => _omana; set => _omana = value; }
+        public int oenergy { get => _oenergy; set => _oenergy = value; }
+        public int level { get => _level; set => _level = value; }
+        public int xp { get => _xp; set => _xp = value; }
+        public int points { get => _points; set => _points = value; }
+        public int health { get => _health; set => _health = value; }
+        public int maxhealth { get => _maxhealth; set => _maxhealth = value; }
+        public int mana { get => _mana; set => _mana = value; }
+        public int maxmana { get => _maxmana; set => _maxmana = value; }
+        public int energy { get => _energy; set => _energy = value; }
+        public int maxenergy { get => _maxenergy; set => _maxenergy = value; }
+        public int defense { get => _defense; set => _defense = value; }
+        public int strength { get => _strength; set => _strength = value; }
+        public int magic { get => _magic; set => _magic = value; }
+        public int critchance { get => _critChance; set => _critChance = value; }
+        public int Cooldown { get => Cooldown; set => Cooldown = value; }
+        public int Stun { get => _Stun; set => _Stun = value; }
+        public int Poison { get => _Poison; set => _Poison = value; }
+        public int Burn { get => _Burn; set => _Burn = value; }
+    }
+    public static int DMG(int x) { int final = x - p.defense; if (final < 0) final = 0; p.health -= final; return final; }
+    public static void Effect(char w)
+    {
+        if (p.Stun > 0) { Console.WriteLine("You are currently stunned"); turn = false; p.Stun--; Clear(); }
+        if (p.Poison > 0 && w == 'q') { int x = DMG(20); Console.WriteLine($"You are poisoned, You lost {x}hp"); p.Poison--; Clear(); }
+        if (p.Burn > 0 && w == 'q') { int x = DMG(20); Console.WriteLine($"You are burning, You lost {x}hp"); p.Burn--; Clear(); }
+    }
+    public static void eEffect()
+    {
+        if (e.Stun > 0) { Console.WriteLine($"{e.name} is currently stunned"); e.Stun--; }
+        if (e.Poison > 0) { int x = eDMG(20); Console.WriteLine($"{e.name} is poisoned, {e.name} lost {x}hp"); e.Poison--; }
+        if (e.Burn > 0) { int x = eDMG(20); Console.WriteLine($"{e.name} is burning, {e.name} lost {x}hp"); e.Burn--; }
+    }
+    public static int eDMG(int x) { int final = x - e.defense; if (final < 0) final = 0; e.health -= final; return final; }
+    public static void Bot()
+    {
+        while (true)
+        {
+            if (e.source <= e.getMax()) { e.B5(); break; }
+            int storedMana = e.source;
+            int move = RandomNumberGenerator.GetInt32(1, 5);
+            eValid(move);
+            if (e.source < 0) { e.source = storedMana; continue; }
+            if (move == 1) e.B1();
+            if (move == 2) e.B2();
+            if (move == 3) e.B3();
+            if (move == 4) e.B4();
+            Clear();
+            break;
+        }
+    }
+    public abstract class Enemy
+    {
+        public String difficulty { get; private set; }
+        public String name { get; private set; }
+        public String power { get; private set; }
+        private int _health;
+        private int _source;
+        private int _defense;
+        private int _critChance;
+        private int _mb1;
+        private int _mb2;
+        private int _mb3;
+        private int _mb4;
+        private int _Cooldown;
+        private int _Stun;
+        private int _Poison;
+        private int _Burn;
+        public Enemy(String _difficulty, String _name, String _power, int health, int source, int defense, int critchance, int MB1, int MB2, int MB3, int MB4)
+        {
+            difficulty = _difficulty;
+            name = _name;
+            power = _power;
+            _health = health;
+            _source = source;
+            _defense = defense;
+            _critChance = critchance;
+            _mb1 = MB1;
+            _mb2 = MB2;
+            _mb3 = MB3;
+            _mb4 = MB4;
+        }
+        public virtual Enemy Clone() { throw new NotImplementedException(); }
+        public abstract void B1();
+        public abstract void B2();
+        public abstract void B3();
+        public abstract void B4();
+        public void B5() { int x = rnd.Next(1, 21); source += x; Console.WriteLine($"{name} is regenerating. +{x} {power}"); }
+        public int health { get => _health; set => _health = value; }
+        public int source { get => _source; set => _source = value; }
+        public int defense { get => _defense; set => _defense = value; }
+        public int critChance { get => _critChance; set => _critChance = value; }
+        public int mb1 { get => _mb1; set => _mb1 = value; }
+        public int mb2 { get => _mb2; set => _mb2 = value; }
+        public int mb3 { get => _mb3; set => _mb3 = value; }
+        public int mb4 { get => _mb4; set => _mb4 = value; }
+        public int getMax() { return new[] { mb1, mb2, mb3, mb4 }.Min(); }
+        public int Cooldown { get => _Cooldown; set => _Cooldown = value; }
+        public int Stun { get => _Stun; set => _Stun = value; }
+        public int Burn { get => _Burn; set => _Burn = value; }
+        public int Poison { get => _Poison; set => _Poison = value; }
+    }
+    public static class Factory // psc can make you store methods inside without needing to call it 
+    {
+        private static Dictionary<string, Enemy> husk = new()
+            {
+                { "Slime", new Slime() },
+                { "Skeleton", new Skeleton() }
+            };
+        public static Enemy Create(string monster)
+        {
+            if (husk.ContainsKey(monster))
+                return husk[monster].Clone(); // used new Slime() as reference, "give me a new copy of that original slime you created"
+            else
+                throw new ArgumentException($"Enemy Type: {monster} doesn't exist.");
+        }
+    }
+    public class Slime : Enemy
+    {                      //Difficulty/name/power/health/source/defense/critchance/mb1/mb2/mb3/mb4
+        public Slime() : base("easy", "Slime", "Goo", 500, 5, 20, 0, 3, 3, 3, 5) { }
+        public override Enemy Clone() { return new Slime(); }
+        public override void B1() { DMG(5); p.Stun += 1; Console.WriteLine($"You stepped on {slime.name}'s goo" + p.health); }
+        public override void B2() { DMG(5); p.Stun += 1; Console.WriteLine($"You stepped on {slime.name}'s goo" + p.health); }
+        public override void B3() { DMG(5); p.Poison += 1; Console.WriteLine($"{slime.name} spat a toxic liquid on your face" + p.health); }
+        public override void B4() { Console.WriteLine("Nothing happened"); }
+    }
+    public class Skeleton : Enemy
+    {
+        public Skeleton() : base("easy", "Skeleton", "Soul", 800, 5, 30, 40, 1, 1, 1, 1) { }
+        public override Enemy Clone() { return new Skeleton(); }
+        public override void B1() { p.Poison += 1; Console.WriteLine("You are poisoned"); }
+        public override void B2() { }
+        public override void B3() { }
+        public override void B4() { }
+    }
+}

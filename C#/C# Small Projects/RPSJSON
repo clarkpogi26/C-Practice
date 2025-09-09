@@ -1,0 +1,70 @@
+using System;
+using System.Security.Cryptography;
+using System.Text.Json;
+enum UserRole { Guest, User, Moderator, Admin } // enum should be outside
+class Program
+{
+    public static int pScore;
+    public static int bScore;
+    public static String pChoice;
+    public static String bChoice;
+    public static bool pWin;
+    public static bool bWin;
+    static void Main(string[] args) // Task: 
+    {
+        LoadFile("a");
+        while (true)
+        {
+            Console.Clear(); pWin = false; bWin = false;
+            Console.WriteLine($"Choose:\n(1) Rock\n(2) Paper\n(3) Scissor\nYou: {pScore} | {bScore} :Bot");
+            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+            char asd = keyInfo.KeyChar; if (asd == '\r') { pScore = 0; bScore = 0; SaveFile("a"); }
+            if (!int.TryParse(asd.ToString(), out int sad) || sad > 3) continue;
+            if (sad == 1) pChoice = "Rock"; if (sad == 2) pChoice = "Paper"; if (sad == 3) pChoice = "Scissor";
+            BotMove(); GameManager();
+        }
+    }
+    public static void BotMove()
+    {
+        int choice = RandomNumberGenerator.GetInt32(1, 4);
+        if (choice == 1) bChoice = "Rock";
+        if (choice == 2) bChoice = "Paper";
+        if (choice == 3) bChoice = "Scissor";
+    }
+    public static void GameManager()
+    {    
+        if (pChoice == "Rock" && bChoice == "Scissor" || pChoice == "Paper" && bChoice == "Rock" || pChoice == "Scissor" && bChoice == "Paper") { pWin = true; pScore++; }
+        if (pChoice == "Rock" && bChoice == "Paper" || pChoice == "Paper" && bChoice == "Scissor" || pChoice == "Scissor" && bChoice == "Rock") { bWin = true; bScore++; }
+        SaveFile("a"); Console.WriteLine($"You: {pChoice} vs {bChoice} :Bot"); Announcer();
+    }
+    public static void Announcer()
+    {
+        if (pChoice == bChoice) Console.WriteLine("Tie!");
+        Console.WriteLine(pWin ? "You Won!" : "");
+        Console.WriteLine(bWin ? "Bot Won!" : "");
+        Thread.Sleep(1350); Console.Clear();
+    }
+    public class SaveScore
+    {
+        public int PScore { get; set; }
+        public int BScore { get; set; }
+    }
+    public static void SaveFile(String path)
+    {
+        var save = new SaveScore { PScore = pScore, BScore = bScore };
+        var option = new JsonSerializerOptions { IncludeFields = true };
+        String json = JsonSerializer.Serialize(save, option);
+        File.WriteAllText(path, json);
+    }
+    public static void LoadFile(String path)
+    {
+        if (!File.Exists(path)) return;
+        string json = File.ReadAllText(path);
+        var saved = JsonSerializer.Deserialize<SaveScore>(json);
+        if (saved != null)
+        {
+            pScore = saved.PScore;
+            bScore = saved.BScore;
+        }
+    }
+}

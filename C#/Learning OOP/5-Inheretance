@@ -1,0 +1,81 @@
+using System;
+using System.Runtime.CompilerServices;
+using C__starter;
+
+namespace C__starter
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            car car = new car();
+            bicycle bicycle = new bicycle();
+            boat boat = new boat();
+            car.setSpeed(100);
+
+            Console.WriteLine($"The {car.wheel} wheeled {car.name} is moving {car.speed} mph!");
+            car.go();
+            car.driftCar();
+
+            Console.WriteLine($"The {bicycle.wheel} wheeled {bicycle.name} is moving {bicycle.speed} mph!");
+            bicycle.go();
+            bicycle.standBicycle();
+
+            Console.WriteLine($"The {boat.wheel} wheeled {boat.name} is moving {boat.speed} mph!");
+            boat.go();
+            boat.boatAnchor();
+        }
+    }
+    class vehicle
+    {
+        public int speed = 0;
+        public String name;
+        public void go()
+        {
+            Console.WriteLine($"The {name} is moving");
+        }
+        public void setSpeed(int speed)
+        {
+            this.speed = speed;
+        }
+    }
+    class car : vehicle
+    {
+        public int wheel = 4;   
+        public car()
+        {
+            this.name = "Mustang GT";
+            this.speed = 155;
+        }
+        public void driftCar()
+        {
+            Console.WriteLine($"The {name} drifted");
+        }
+    }
+    class bicycle : vehicle
+    {
+        public int wheel = 2;
+        public bicycle()
+        {
+            this.name = "Mountain Bike";
+            this.speed = 12;
+        }
+        public void standBicycle()
+        {
+            Console.WriteLine($"The {name} used it's stand");
+        }
+    }
+    class boat : vehicle
+    {
+        public int wheel = 0;
+        public boat()
+        {
+            this.name = "Slice of Life";
+            this.speed = 60;
+        }
+        public void boatAnchor()
+        {
+            Console.WriteLine($"The {name} used it's anchor");
+        }
+    }
+}

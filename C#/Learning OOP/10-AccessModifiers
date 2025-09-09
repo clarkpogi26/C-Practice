@@ -1,0 +1,28 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Xml.Linq;
+using C__starter;
+
+namespace C__starter;
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Person person = new Person();
+        person.setBirthDate(new DateTime(2000,5,5));
+        Console.WriteLine(person.getBirthDate());
+        }
+    
+    public class Person
+    {
+        private DateTime _birthdate;
+        public void setBirthDate(DateTime birthdate)
+        {
+            this._birthdate = birthdate;
+        }
+        public DateTime getBirthDate()
+        {
+            return _birthdate;
+        }
+    }
+}

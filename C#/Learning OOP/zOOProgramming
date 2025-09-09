@@ -1,0 +1,167 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+using C__starter;
+
+namespace C__starter;
+class Program
+{
+    static void Main(string[] args)
+    {       
+        Lion lion = new();
+        Rabbit rabbit = new();
+        Fox fox = new("Fever");
+        Fox fox2 = new("Sly");
+        List<Animal> animals = new() { lion, rabbit, fox, fox2 };
+        List<IPrey> prey = new() { rabbit, fox, fox2 };
+        List<IPredator> predator = new() { lion, fox, fox2 };
+        foreach (var animal in animals)
+        {
+            if (animal is Lion l) // if the is <is (Class)> you need to add a new variable name (l)
+            {                     // same thing applies to Interfaces
+                l.Eat();
+            }
+            else if (animal is Fox f)
+            {
+                f.Eat();
+            }
+            else if (animal is Rabbit r)
+            {
+                r.Eat();
+            }
+                animal.Sleep();
+            animal.MakeSound();
+            Console.WriteLine();
+        }
+        foreach (var animalO in prey)
+        {
+            animalO.Hide();
+            animalO.Run();
+            Console.WriteLine();
+        }
+        foreach (var animalX in predator)
+        {
+            animalX.Hunt();
+            animalX.Ravage();
+            Console.WriteLine();
+        }
+    }
+    abstract public class Animal
+    {
+        private string species;
+        private string name;
+        public void Eat(String food)
+        {
+            Console.WriteLine($"{name} the {species} is eating {food}");
+        }
+        public void Sleep()
+        {
+            Console.WriteLine($"{name} is sleeping");
+        }
+        public String Name
+        {
+            get { return name; }
+            set { name = value; }
+        }
+        public String Species
+        {
+            get { return species; }
+            set { species = value; }
+        }
+        public abstract void MakeSound();
+    }
+    public interface IPredator
+    {
+        void Hunt();
+        void Ravage();
+    }
+    public interface IPrey
+    {
+        void Hide();
+        void Run();
+    }
+    public class Lion : Animal, IPredator
+    {
+        public Lion() // modifier room
+        {
+            Name = "Johnny";
+            Species = "Lion";
+        }
+        public void Eat()
+        {
+            Eat("Meat");
+        }
+        public override void MakeSound()
+        {
+            Console.WriteLine($"Raawwwwrrrrr");
+        }
+        public void Hunt()
+        {
+            Console.WriteLine($"a {Species} is hunting for food");
+        }
+        public void Ravage()
+        {
+            Console.WriteLine($"{Name} is attacking a prey");
+        }
+    }
+    public class Rabbit : Animal, IPrey
+    {
+        public Rabbit()
+        {
+            Species = "Cottontail";
+            Name = "Rudy";
+        }
+        public void Eat()
+        {
+            Eat("Carrot");
+        }
+        public void Sleep()
+        {
+            Console.WriteLine($"{Name} is having a great sleep");
+        }
+        public override void MakeSound()
+        {
+            Console.WriteLine("Squeak");
+        }
+        public void Hide()
+        {
+            Console.WriteLine($"a {Species} is hiding");
+        }
+        public void Run()
+        {
+            Console.WriteLine($"{Name} is running away");
+        }
+    }
+    public class Fox : Animal, IPrey, IPredator
+    {
+        public Fox(String name)
+        {
+            Species = "Arctic";
+            Name = name;
+        }
+        public void Eat()
+        {
+            Eat("Rodent");
+        }
+        public override void MakeSound()
+        {
+            Console.WriteLine("wa-pa-pa yip ack ack awoor eeeekk");
+        }
+        public void Hunt()
+        {
+            Console.WriteLine($"a {Species} is hunting");
+        }
+        public void Ravage()
+        {
+            Console.WriteLine($"{Name} is ravaging a rat");
+        }
+        public void Hide()
+        {
+            Console.WriteLine($"a {Species} is hiding");
+        }
+        public void Run()
+        {
+            Console.WriteLine($"{Name} is running away");
+        }
+    }
+}

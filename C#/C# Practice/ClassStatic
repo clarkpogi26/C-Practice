@@ -1,0 +1,34 @@
+using System;
+using System.Security.Cryptography.X509Certificates;
+using C__starter;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Music music1 = new Music("Holiday", "Green Day", 200);
+        Console.WriteLine(Music.songCount);
+        Music music2 = new Music("Kashmir", "Led Zeppelin", 150);
+        Console.WriteLine(music2.getSongCount());
+    }
+    internal class Music
+    {
+        public string title;
+        public string artist;
+        public int duration;
+        public static int songCount = 0;
+
+        public Music(string aTitle, string aArtist, int aDuration)
+        {
+            title = aTitle;
+            artist = aArtist;
+            duration = aDuration;
+            songCount++;
+        }
+        public int getSongCount()
+        {
+            return songCount;
+        }
+    }
+
+}

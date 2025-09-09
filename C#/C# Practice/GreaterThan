@@ -1,0 +1,32 @@
+using System;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Console.Write("Type a number: ");
+        int input = Convert.ToInt32(Console.ReadLine());
+        Console.Write("Another number: ");
+        int input2 = Convert.ToInt32(Console.ReadLine());
+        Console.Write("One last number: ");
+        int input3 = Convert.ToInt32(Console.ReadLine());   
+        Console.WriteLine(GetMax(input, input2, input3));
+    }
+    static int GetMax(int num1, int num2, int num3)
+    {
+        int result;
+        if (num1 >= num2 && num1 >= num3)
+        {
+            result = num1;
+        }
+        else if (num2 >= num1 && num2 >= num3)
+        {
+            result = num2;
+        }
+        else
+        {
+            result = num3;
+        }
+        return result;
+    }
+}

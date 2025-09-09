@@ -1,0 +1,78 @@
+using System;
+enum UserRole { Guest, User, Moderator, Admin } // enum should be outside
+class Program
+{
+    static void Main(string[] args)
+    {       
+        object box = true;
+        switch (box)
+        {
+            case int i when i % 2 == 0: Console.WriteLine($"Even Number: {i}"); break;
+            case int i when i % 2 != 0: Console.WriteLine($"Odd Number: {i}"); break;
+            case string i: Console.WriteLine($"String: {i}");break;
+            case char i: Console.WriteLine($"Character: {i}");break;
+            case bool i: Console.WriteLine($"Boolean: {i}");break; // Bolean: True
+            default: Console.WriteLine($"Unknown");break;
+        }
+
+        int number = 50;
+        string result = number switch
+        {
+            int i when i < 50 => "Failing",
+            int i when i >= 50 && i < 75 => "Passing",
+            int i when i >= 75 && i < 90 => "Good",
+            >= 90 => "Excellent",
+            _ => "Invalid"
+        };
+        Console.WriteLine(result); // Passing
+
+        UserRole role = UserRole.Moderator;
+        string message = role switch
+        {
+            UserRole.Guest => "Limited Access",
+            UserRole.User => "Standard Access",
+            UserRole.Moderator => "Can Manage Contents",
+            UserRole.Admin => "Full Control",
+            _ => "Unknown Role"
+        };
+        Console.WriteLine(message); // Can Manage Contents
+
+        (string action, int damage) input = ("attack", 32);
+
+        string ending = input switch
+        {
+            ("attack", >= 50) => "Critical Hit",
+            ("attack", >= 30) => "High Damage",
+            ("special", < 30) => "Low Damage",
+            ("special", >= 0) => "Failure",
+            _ => "Unknown Action"
+        };
+        Console.WriteLine(ending); // Critical Hit
+
+        string getAction(int code) =>
+        code switch
+        {
+            1 => "Attack",
+            2 => "Defend",
+            3 => "Heal",
+            _ => "Wait"
+        };
+        Console.WriteLine(getAction(2)); // Defend
+
+        Person person = new() { name = "John", age = 21 };
+        string category = person switch
+        {
+            { age: < 13 } => "Child",
+            { age: >= 13 and < 18 } => "Teenager",
+            { age: >= 18 and < 65 } => "Adult",
+            { age: >= 65 } => "Senior",
+            _ => "Unknown"
+        };
+        Console.WriteLine($"{person.name} | {person.age}"); // John | 21
+    }
+    public class Person // Connected to: John | 21
+    {
+        public String name { get; set; }
+        public int age { get; set; }
+    }
+}
